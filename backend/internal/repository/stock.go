@@ -6,11 +6,9 @@ import (
 	"github.com/CorreaJose13/StockAPI/models"
 )
 
-type stock models.Response
-
 type StockRepository interface {
-	InsertStock(ctx context.Context, stock *stock) error
-	GetStocks(ctx context.Context) ([]*stock, error)
+	InsertStock(ctx context.Context, stock *models.FormattedStock) error
+	GetStocks(ctx context.Context) ([]*models.FormattedStock, error)
 	Close() error
 }
 
@@ -20,11 +18,11 @@ func SetStockRepository(repo StockRepository) {
 	implementation = repo
 }
 
-func InsertStock(ctx context.Context, stock *stock) error {
+func InsertStock(ctx context.Context, stock *models.FormattedStock) error {
 	return implementation.InsertStock(ctx, stock)
 }
 
-func GetStocks(ctx context.Context) ([]*stock, error) {
+func GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
 	return implementation.GetStocks(ctx)
 }
 
