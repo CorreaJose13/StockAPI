@@ -35,7 +35,7 @@ func (ac *ApiConsumer) FetchStocks() ([]models.Stock, error) {
 			url += "?next_page=" + nextPage
 		}
 
-		log.Printf("Fetching stocks from: %s", url)
+		log.Printf("fetching stocks from: %s", url)
 
 		body, err := ac.doRequest(url)
 		if err != nil {
@@ -45,7 +45,7 @@ func (ac *ApiConsumer) FetchStocks() ([]models.Stock, error) {
 		stocks = append(stocks, body.Items...)
 
 		if body.Next_page == "" {
-			log.Println("All stock data retrieved successfully")
+			log.Println("all stock data retrieved successfully")
 			break
 		}
 
