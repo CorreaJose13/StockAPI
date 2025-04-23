@@ -10,17 +10,19 @@ import (
 type Config struct {
 	ApiUrl      string
 	BearerToken string
+	DbUrl       string
 }
 
 func LoadConfig() (*Config, error) {
 	err := godotenv.Load()
 	if err != nil {
-		return nil, fmt.Errorf("error loading .env file")
+		return nil, fmt.Errorf("error loading .env file: %w", err)
 	}
 
 	config := &Config{
 		ApiUrl:      os.Getenv("API_URL"),
 		BearerToken: os.Getenv("BEARER_TOKEN"),
+		DbUrl:       os.Getenv("DB_URL"),
 	}
 
 	return config, nil
