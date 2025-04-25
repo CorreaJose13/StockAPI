@@ -36,7 +36,7 @@ const navItems = computed(() => {
     </div>
   </header>
 
-  <main>
+  <main class="min-h-screen bg-gray-100">
     <RouterView />
   </main>
 </template>
