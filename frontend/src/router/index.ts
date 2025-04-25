@@ -1,6 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
-import StocksView from '@/views/StocksView.vue'
+import StocksTableView from '@/views/StocksTableView.vue'
 import RecommendationsView from '@/views/RecommendationsView.vue'
 
 const router = createRouter({
@@ -14,7 +14,7 @@ const router = createRouter({
     {
       path: '/all-stocks',
       name: 'stocks',
-      component: StocksView,
+      component: StocksTableView,
     },
     {
       path: '/stock-recommendations',
