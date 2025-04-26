@@ -10,6 +10,7 @@ export const stocks = [
     ratingFrom: 'Hold',
     ratingTo: 'Buy',
     time: '2025-01-15T09:30:00.000Z',
+    category: 'Technology',
   },
   {
     id: 2,
@@ -22,6 +23,7 @@ export const stocks = [
     ratingFrom: 'Buy',
     ratingTo: 'Buy',
     time: '2025-01-14T14:45:00.000Z',
+    category: 'Technology',
   },
   {
     id: 3,
@@ -34,9 +36,110 @@ export const stocks = [
     ratingFrom: 'Neutral',
     ratingTo: 'Sell',
     time: '2025-01-13T11:15:00.000Z',
+    category: 'Consumer',
+  },
+  {
+    id: 4,
+    ticker: 'AMZN',
+    targetFrom: 180.0,
+    targetTo: 200.0,
+    company: 'Amazon.com Inc.',
+    action: 'upgraded by',
+    brokerage: 'Deutsche Bank',
+    ratingFrom: 'Hold',
+    ratingTo: 'Buy',
+    time: '2025-01-12T10:30:00.000Z',
+    category: 'Consumer',
+  },
+  {
+    id: 5,
+    ticker: 'JPM',
+    targetFrom: 155.0,
+    targetTo: 175.0,
+    company: 'JPMorgan Chase & Co.',
+    action: 'upgraded by',
+    brokerage: 'Barclays',
+    ratingFrom: 'Neutral',
+    ratingTo: 'Overweight',
+    time: '2025-01-11T15:45:00.000Z',
+    category: 'Financial',
+  },
+  {
+    id: 6,
+    ticker: 'GOOG',
+    targetFrom: 145.0,
+    targetTo: 170.0,
+    company: 'Alphabet Inc.',
+    action: 'reiterated by',
+    brokerage: 'UBS',
+    ratingFrom: 'Buy',
+    ratingTo: 'Buy',
+    time: '2025-01-10T13:20:00.000Z',
+    category: 'Technology',
+  },
+  {
+    id: 7,
+    ticker: 'JNJ',
+    targetFrom: 160.0,
+    targetTo: 145.0,
+    company: 'Johnson & Johnson',
+    action: 'downgraded by',
+    brokerage: 'Citigroup',
+    ratingFrom: 'Buy',
+    ratingTo: 'Neutral',
+    time: '2025-01-09T11:00:00.000Z',
+    category: 'Healthcare',
+  },
+  {
+    id: 8,
+    ticker: 'WMT',
+    targetFrom: 65.0,
+    targetTo: 75.0,
+    company: 'Walmart Inc.',
+    action: 'upgraded by',
+    brokerage: 'Jefferies',
+    ratingFrom: 'Hold',
+    ratingTo: 'Buy',
+    time: '2025-01-08T14:15:00.000Z',
+    category: 'Consumer',
+  },
+  {
+    id: 9,
+    ticker: 'NVDA',
+    targetFrom: 500.0,
+    targetTo: 550.0,
+    company: 'NVIDIA Corporation',
+    action: 'upgraded by',
+    brokerage: 'Bank of America',
+    ratingFrom: 'Neutral',
+    ratingTo: 'Buy',
+    time: '2025-01-07T10:00:00.000Z',
+    category: 'Technology',
+  },
+  {
+    id: 10,
+    ticker: 'PEP',
+    targetFrom: 180.0,
+    targetTo: 190.0,
+    company: 'PepsiCo, Inc.',
+    action: 'reiterated by',
+    brokerage: 'Wells Fargo',
+    ratingFrom: 'Buy',
+    ratingTo: 'Buy',
+    time: '2025-01-06T09:30:00.000Z',
+    category: 'Consumer',
   },
 ]
 
 export function useStockData() {
   return stocks
+}
+
+export function getStocksByCategory(category: string) {
+  return stocks.filter((stock) => stock.category === category)
+}
+
+export function getStockCategories() {
+  const categories = new Set(stocks.map((stock) => stock.category))
+  return Array.from(categories)
 }
