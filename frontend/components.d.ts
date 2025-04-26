@@ -10,17 +10,15 @@ declare module 'vue' {
   export interface GlobalComponents {
     Button: typeof import('primevue/button')['default']
     Carousel: typeof import('primevue/carousel')['default']
+    Chart: typeof import('primevue/chart')['default']
     DashboardSection: typeof import('./src/components/DashboardSection.vue')['default']
+    Dialog: typeof import('primevue/dialog')['default']
     InfoCard: typeof import('./src/components/InfoCard.vue')['default']
+    InputText: typeof import('primevue/inputtext')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchIcon: typeof import('./src/components/icons/SearchIcon.vue')['default']
     StockCard: typeof import('./src/components/StockCard.vue')['default']
-    Tab: typeof import('primevue/tab')['default']
-    TabList: typeof import('primevue/tablist')['default']
-    TabPanel: typeof import('primevue/tabpanel')['default']
-    TabPanels: typeof import('primevue/tabpanels')['default']
-    Tabs: typeof import('primevue/tabs')['default']
-    Tag: typeof import('primevue/tag')['default']
+    StockDetails: typeof import('./src/components/StockDetails.vue')['default']
   }
 }
