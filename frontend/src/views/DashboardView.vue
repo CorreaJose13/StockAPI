@@ -22,7 +22,7 @@ const stocks = useStockData()
       />
       <InfoCard title="Total Users" :value="12" color="text-red-600" description="Total number " />
     </section>
-    <DashboardSection title="Recommendations" link="/stock-recommendations" :stocks="stocks" />
+    <DashboardSection title="Recommendations" link="/stock-insights" :stocks="stocks" />
     <DashboardSection title="Stocks" link="/all-stocks" :stocks="stocks" />
   </div>
 </template>

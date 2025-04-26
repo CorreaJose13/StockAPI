@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import DashboardView from '../views/DashboardView.vue'
 import StocksTableView from '@/views/StocksTableView.vue'
-import RecommendationsView from '@/views/RecommendationsView.vue'
+import InsightsView from '@/views/InsightsView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -17,9 +17,9 @@ const router = createRouter({
       component: StocksTableView,
     },
     {
-      path: '/stock-recommendations',
-      name: 'recommendations',
-      component: RecommendationsView,
+      path: '/stock-insights',
+      name: 'insights',
+      component: InsightsView,
     },
   ],
 })
