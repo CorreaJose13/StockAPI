@@ -12,20 +12,20 @@ type StockRepository interface {
 	Close() error
 }
 
-var implementation StockRepository
+var stockRepoImpl StockRepository
 
 func SetStockRepository(repo StockRepository) {
-	implementation = repo
+	stockRepoImpl = repo
 }
 
 func InsertStock(ctx context.Context, stock *models.FormattedStock) error {
-	return implementation.InsertStock(ctx, stock)
+	return stockRepoImpl.InsertStock(ctx, stock)
 }
 
 func GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
-	return implementation.GetStocks(ctx)
+	return stockRepoImpl.GetStocks(ctx)
 }
 
 func Close() error {
-	return implementation.Close()
+	return stockRepoImpl.Close()
 }

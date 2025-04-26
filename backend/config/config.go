@@ -8,9 +8,10 @@ import (
 )
 
 type Config struct {
-	ApiUrl      string
+	APIUrl      string
 	BearerToken string
 	DbUrl       string
+	APIKey      string
 }
 
 func LoadConfig() (*Config, error) {
@@ -20,9 +21,10 @@ func LoadConfig() (*Config, error) {
 	}
 
 	config := &Config{
-		ApiUrl:      os.Getenv("API_URL"),
+		APIUrl:      os.Getenv("API_URL"),
 		BearerToken: os.Getenv("BEARER_TOKEN"),
 		DbUrl:       os.Getenv("DB_URL"),
+		APIKey:      os.Getenv("API_KEY"),
 	}
 
 	return config, nil
