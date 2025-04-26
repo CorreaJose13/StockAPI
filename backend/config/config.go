@@ -8,9 +8,9 @@ import (
 )
 
 type Config struct {
-	APIUrl      string
+	APIURL      string
 	BearerToken string
-	DbUrl       string
+	DBURL       string
 	APIKey      string
 }
 
@@ -21,9 +21,9 @@ func LoadConfig() (*Config, error) {
 	}
 
 	config := &Config{
-		APIUrl:      os.Getenv("API_URL"),
+		APIURL:      os.Getenv("API_URL"),
 		BearerToken: os.Getenv("BEARER_TOKEN"),
-		DbUrl:       os.Getenv("DB_URL"),
+		DBURL:       os.Getenv("DB_URL"),
 		APIKey:      os.Getenv("API_KEY"),
 	}
 

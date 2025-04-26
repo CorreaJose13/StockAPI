@@ -15,12 +15,12 @@ type Stock struct {
 }
 
 type Response struct {
-	Items     []Stock `json:"items"`
-	Next_page string  `json:"next_page"`
+	Items    []Stock `json:"items"`
+	NextPage string  `json:"next_page"`
 }
 
 type FormattedStock struct {
-	Id         int64     `json:"id"`
+	ID         int64     `json:"id"`
 	Ticker     string    `json:"ticker"`
 	TargetFrom float64   `json:"target_from"`
 	TargetTo   float64   `json:"target_to"`

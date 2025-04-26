@@ -4,10 +4,11 @@ import (
 	"database/sql"
 	"fmt"
 
+	"context"
+
 	"github.com/CorreaJose13/StockAPI/config"
 	"github.com/CorreaJose13/StockAPI/models"
 	_ "github.com/lib/pq"
-	"golang.org/x/net/context"
 )
 
 type CockRoachRepository struct {
@@ -15,7 +16,7 @@ type CockRoachRepository struct {
 }
 
 func NewPostgresRepository(cfg *config.Config) (*CockRoachRepository, error) {
-	db, err := sql.Open("postgres", cfg.DbUrl)
+	db, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
@@ -25,7 +26,7 @@ func NewPostgresRepository(cfg *config.Config) (*CockRoachRepository, error) {
 	}
 
 	createStocksTableQuery := `CREATE TABLE IF NOT EXISTS stocks (
-        ticker VARCHAR(10) NOT NULL,
+        ticker VARCHAR(10) PRIMARY KEY NOT NULL,
         target_from DECIMAL(10, 2) NOT NULL,
         target_to DECIMAL(10, 2) NOT NULL,
         company VARCHAR(255) NOT NULL,
@@ -84,7 +85,7 @@ func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.Forma
 	for rows.Next() {
 		var stock models.FormattedStock
 		if err := rows.Scan(
-			&stock.Id,
+			&stock.ID,
 			&stock.Ticker,
 			&stock.TargetFrom,
 			&stock.TargetTo,
