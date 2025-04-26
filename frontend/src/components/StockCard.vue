@@ -41,7 +41,7 @@ const props = defineProps({
 <template>
   <div class="bg-white rounded-lg shadow-md p-4 min-w-3xs w-full max-w-sm">
     <div class="flex gap-2 items-center mb-1">
-      <span class="font-bold text-lg"> {{ props.ticker }} </span>
+      <span class="font-bold text-lg text-black"> {{ props.ticker }} </span>
       <span class="bg-blue-500 text-white text-xs px-2 py-0.5 rounded-full">
         {{ props.action }}
       </span>
@@ -52,8 +52,8 @@ const props = defineProps({
       <div class="flex items-center">
         <span class="text-black font-semibold">Target Price:</span>
         <span class="text-gray-500 line-through ml-1">${{ props.targetFrom }}</span>
-        <span class="ml-1">→</span>
-        <span class="ml-1 font-bold">${{ props.targetTo }}</span>
+        <span class="ml-1 text-black">→</span>
+        <span class="ml-1 font-bold text-black">${{ props.targetTo }}</span>
       </div>
     </div>
 
@@ -62,8 +62,8 @@ const props = defineProps({
         <span class="text-black font-bold">Rating:</span>
         <div>
           <span class="text-gray-500 line-through"> {{ props.ratingFrom }} </span>
-          <span class="ml-1">→</span>
-          <span class="ml-1 font-bold"> {{ props.ratingTo }} </span>
+          <span class="ml-1 text-black">→</span>
+          <span class="ml-1 font-bold text-black"> {{ props.ratingTo }} </span>
         </div>
       </div>
     </div>
