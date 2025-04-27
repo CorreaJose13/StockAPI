@@ -4,10 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 
+	"context"
+
 	"github.com/CorreaJose13/StockAPI/config"
 	"github.com/CorreaJose13/StockAPI/models"
+	"github.com/lib/pq"
 	_ "github.com/lib/pq"
-	"golang.org/x/net/context"
 )
 
 type CockRoachRepository struct {
@@ -15,21 +17,17 @@ type CockRoachRepository struct {
 }
 
 func NewPostgresRepository(cfg *config.Config) (*CockRoachRepository, error) {
-	db, err := sql.Open("postgres", cfg.DbUrl)
+	db, err := sql.Open("postgres", cfg.DBURL)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
 
-	if err := db.Ping(); err != nil {
-		return nil, fmt.Errorf("failed to ping database: %w", err)
-	}
-
 	createStocksTableQuery := `CREATE TABLE IF NOT EXISTS stocks (
-        ticker VARCHAR(10) NOT NULL,
+        ticker VARCHAR(10) PRIMARY KEY,
         target_from DECIMAL(10, 2) NOT NULL,
         target_to DECIMAL(10, 2) NOT NULL,
         company VARCHAR(255) NOT NULL,
-        action VARCHAR(50) NOT NULL,
+        action VARCHAR(20) NOT NULL,
         brokerage VARCHAR(255) NOT NULL,
         rating_from VARCHAR(50) NOT NULL,
         rating_to VARCHAR(50) NOT NULL,
@@ -47,30 +45,42 @@ func (repo *CockRoachRepository) Close() error {
 	return repo.db.Close()
 }
 
-func (repo *CockRoachRepository) InsertStock(ctx context.Context, stock *models.FormattedStock) error {
-	insertStockQuery := `
-        INSERT INTO stocks (
-            ticker, target_from, target_to, company, 
-            action, brokerage, rating_from, rating_to, time
-        ) VALUES (
-            $1, $2, $3, $4, $5, $6, $7, $8, $9
-        )`
+func (repo *CockRoachRepository) BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error {
+	txn, err := repo.db.Begin()
+	if err != nil {
+		return err
+	}
 
-	_, err := repo.db.ExecContext(
-		ctx,
-		insertStockQuery,
-		stock.Ticker,
-		stock.TargetFrom,
-		stock.TargetTo,
-		stock.Company,
-		stock.Action,
-		stock.Brokerage,
-		stock.RatingFrom,
-		stock.RatingTo,
-		stock.Time,
-	)
+	stmt, err := txn.Prepare(pq.CopyIn("stocks", "ticker", "target_from", "target_to",
+		"company", "action", "brokerage", "rating_from", "rating_to", "time"))
+	if err != nil {
+		return err
+	}
 
-	return err
+	for _, user := range stocks {
+		_, err = stmt.Exec(user.Ticker, user.TargetFrom, user.TargetTo, user.Company,
+			user.Action, user.Brokerage, user.RatingFrom, user.RatingTo, user.Time)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	err = stmt.Close()
+	if err != nil {
+		return err
+	}
+
+	err = txn.Commit()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
@@ -84,7 +94,7 @@ func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.Forma
 	for rows.Next() {
 		var stock models.FormattedStock
 		if err := rows.Scan(
-			&stock.Id,
+			&stock.ID,
 			&stock.Ticker,
 			&stock.TargetFrom,
 			&stock.TargetTo,

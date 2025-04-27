@@ -8,6 +8,7 @@ import (
 	"github.com/CorreaJose13/StockAPI/internal/api"
 	"github.com/CorreaJose13/StockAPI/internal/db"
 	"github.com/CorreaJose13/StockAPI/internal/repository"
+	"github.com/CorreaJose13/StockAPI/models"
 	"github.com/CorreaJose13/StockAPI/utils"
 )
 
@@ -26,9 +27,15 @@ func main() {
 
 	repository.SetStockRepository(repo)
 
-	defer repository.Close()
+	stocks := fetchStocks(cfg)
 
-	consumer := api.NewApiConsumer(cfg)
+	if err := bulkInsert(ctx, stocks); err != nil {
+		log.Fatalf("failed to bulk insert stocks: %v", err)
+	}
+}
+
+func fetchStocks(cfg *config.Config) []models.Stock {
+	consumer := api.NewAPIConsumer(cfg)
 
 	log.Println("fetching stocks from API...")
 	stocks, err := consumer.FetchStocks()
@@ -38,25 +45,24 @@ func main() {
 
 	log.Printf("successfully fetched %d stocks", len(stocks))
 
-	log.Println("Storing stocks in database...")
+	return stocks
+}
+
+func bulkInsert(ctx context.Context, stocks []models.Stock) error {
+	var formattedStocks []*models.FormattedStock
 	for _, stock := range stocks {
 		formattedStock, err := utils.Formatter(&stock)
 		if err != nil {
-			log.Printf("error formatting stock %s: %v", stock.Ticker, err)
+			return err
 		}
-
-		if err := repository.InsertStock(ctx, formattedStock); err != nil {
-			log.Printf("error storing stock %s: %v", stock.Ticker, err)
-			continue
-		}
+		formattedStocks = append(formattedStocks, formattedStock)
 	}
 
-	log.Println("Successfully stored stocks in database")
-
-	getStocks, err := repository.GetStocks(ctx)
-	if err != nil {
-		log.Fatalf("failed to get stocks: %v", err)
+	if err := repository.BulkInsertStocks(ctx, formattedStocks); err != nil {
+		return err
 	}
 
-	log.Printf("successfully retrieved %d stocks from database", len(getStocks))
+	log.Printf("successfully inserted %d stocks into the database", len(formattedStocks))
+
+	return nil
 }

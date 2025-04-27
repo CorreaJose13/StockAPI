@@ -11,26 +11,26 @@ import (
 	"github.com/CorreaJose13/StockAPI/models"
 )
 
-type ApiConsumer struct {
+type APIConsumer struct {
 	client    *http.Client
-	apiUrl    string
+	apiURL    string
 	authToken string
 }
 
-func NewApiConsumer(cfg *config.Config) *ApiConsumer {
-	return &ApiConsumer{
+func NewAPIConsumer(cfg *config.Config) *APIConsumer {
+	return &APIConsumer{
 		client:    &http.Client{},
-		apiUrl:    cfg.ApiUrl,
+		apiURL:    cfg.APIURL,
 		authToken: "Bearer " + cfg.BearerToken,
 	}
 }
 
-func (ac *ApiConsumer) FetchStocks() ([]models.Stock, error) {
+func (ac *APIConsumer) FetchStocks() ([]models.Stock, error) {
 	var stocks []models.Stock
 	nextPage := ""
 
 	for {
-		url := ac.apiUrl
+		url := ac.apiURL
 		if nextPage != "" {
 			url += "?next_page=" + nextPage
 		}
@@ -44,18 +44,17 @@ func (ac *ApiConsumer) FetchStocks() ([]models.Stock, error) {
 
 		stocks = append(stocks, body.Items...)
 
-		if body.Next_page == "" {
-			log.Println("all stock data retrieved successfully")
+		if body.NextPage == "" {
 			break
 		}
 
-		nextPage = body.Next_page
+		nextPage = body.NextPage
 	}
 
 	return stocks, nil
 }
 
-func (ac *ApiConsumer) doRequest(url string) (*models.Response, error) {
+func (ac *APIConsumer) doRequest(url string) (*models.Response, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
