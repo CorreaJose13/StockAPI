@@ -7,7 +7,7 @@ import (
 )
 
 type StockRepository interface {
-	InsertStock(ctx context.Context, stock *models.FormattedStock) error
+	BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error
 	GetStocks(ctx context.Context) ([]*models.FormattedStock, error)
 	Close() error
 }
@@ -18,8 +18,8 @@ func SetStockRepository(repo StockRepository) {
 	stockRepoImpl = repo
 }
 
-func InsertStock(ctx context.Context, stock *models.FormattedStock) error {
-	return stockRepoImpl.InsertStock(ctx, stock)
+func BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error {
+	return stockRepoImpl.BulkInsertStocks(ctx, stocks)
 }
 
 func GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
