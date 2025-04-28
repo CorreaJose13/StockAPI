@@ -105,32 +105,11 @@ func (a *Analysis) computeStockMetrics() *stockMetrics {
 		normalizedBrokerage := strings.TrimSpace(strings.ToLower(stock.Brokerage))
 		frequency[normalizedBrokerage]++
 
-		// Min and max percentage change
-		if percChange < minPerc {
-			minPerc = percChange
-		}
-
-		if percChange > maxPerc {
-			maxPerc = percChange
-		}
-
-		// Min and max absolute change
-		if absChange < minAbs {
-			minAbs = absChange
-		}
-
-		if absChange > maxAbs {
-			maxAbs = absChange
-		}
-
-		// oldest and newest time
-		if timeValue < minTime {
-			minTime = timeValue
-		}
-
-		if timeValue > maxTime {
-			maxTime = timeValue
-		}
+		minPerc, maxPerc = setMinMax(percChange, minPerc, maxPerc)
+		minAbs, maxAbs = setMinMax(absChange, minAbs, maxAbs)
+		minTimeF, maxTimeF := setMinMax(float64(timeValue), float64(minTime), float64(maxTime))
+		minTime = int64(minTimeF)
+		maxTime = int64(maxTimeF)
 	}
 	return &stockMetrics{
 		brokerageMap:  frequency,
@@ -148,6 +127,16 @@ func normalizeValue(value, min, max float64) float64 {
 		return 1.0
 	}
 	return (value - min) / (max - min)
+}
+
+func setMinMax(value, min, max float64) (float64, float64) {
+	if value < min {
+		min = value
+	}
+	if value > max {
+		max = value
+	}
+	return min, max
 }
 
 func percentageChange(targetFrom, targetTo float64) float64 {
