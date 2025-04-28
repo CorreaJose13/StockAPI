@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	porcChangeWeight = 25.0 / 100
+	percChangeWeight = 25.0 / 100
 	absChangeWeight  = 15.0 / 100
 	timeWeight       = 15.0 / 100
 	brokerageWeight  = 10.0 / 100
@@ -59,10 +59,10 @@ func (a *Analysis) Analyze() {
 	metrics := a.computeStockMetrics()
 
 	for _, stock := range a.Stocks {
-		porcChange := percentageChange(stock.TargetFrom, stock.TargetTo)
+		percChange := percentageChange(stock.TargetFrom, stock.TargetTo)
 		absChange := absoluteChange(stock.TargetFrom, stock.TargetTo)
 		timeValue := stock.Time.Unix()
-		porcChangeScore := normalizeValue(porcChange, metrics.minPercChange, metrics.maxPercChange)
+		percChangeScore := normalizeValue(percChange, metrics.minPercChange, metrics.maxPercChange)
 		absChangeScore := normalizeValue(absChange, metrics.minAbsChange, metrics.maxAbsChange)
 		timeScore := normalizeValue(float64(timeValue), float64(metrics.oldestTime), float64(metrics.newestTime))
 		brokerageScore := a.brokerageScore(metrics.brokerageMap, stock.Brokerage, a.getStocksCount())
@@ -70,7 +70,7 @@ func (a *Analysis) Analyze() {
 		ratingDiffScore := ratingDifference(stock.RatingFrom, stock.RatingTo)
 		actionValue := mapActionToFloat(stock.Action)
 
-		overallScore := (porcChangeScore * porcChangeWeight) +
+		overallScore := (percChangeScore * percChangeWeight) +
 			(absChangeScore * absChangeWeight) +
 			(timeScore * timeWeight) +
 			(brokerageScore * brokerageWeight) +
