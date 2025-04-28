@@ -5,6 +5,7 @@ import (
 	"log"
 
 	"github.com/CorreaJose13/StockAPI/config"
+	"github.com/CorreaJose13/StockAPI/internal/analysis"
 	"github.com/CorreaJose13/StockAPI/internal/api"
 	"github.com/CorreaJose13/StockAPI/internal/db"
 	"github.com/CorreaJose13/StockAPI/internal/repository"
@@ -29,7 +30,19 @@ func main() {
 
 	stocks := fetchStocks(cfg)
 
-	if err := bulkInsert(ctx, stocks); err != nil {
+	var formattedStocks []*models.FormattedStock
+	for _, stock := range stocks {
+		formattedStock, err := utils.Formatter(&stock)
+		if err != nil {
+			log.Fatalf("failed to format stock: %v", err)
+		}
+		formattedStocks = append(formattedStocks, formattedStock)
+	}
+
+	analysis := analysis.NewAnalysis(formattedStocks)
+	analysis.Analyze()
+
+	if err := bulkInsert(ctx, analysis.Stocks); err != nil {
 		log.Fatalf("failed to bulk insert stocks: %v", err)
 	}
 }
@@ -48,21 +61,13 @@ func fetchStocks(cfg *config.Config) []models.Stock {
 	return stocks
 }
 
-func bulkInsert(ctx context.Context, stocks []models.Stock) error {
-	var formattedStocks []*models.FormattedStock
-	for _, stock := range stocks {
-		formattedStock, err := utils.Formatter(&stock)
-		if err != nil {
-			return err
-		}
-		formattedStocks = append(formattedStocks, formattedStock)
-	}
+func bulkInsert(ctx context.Context, stocks []*models.FormattedStock) error {
 
-	if err := repository.BulkInsertStocks(ctx, formattedStocks); err != nil {
+	if err := repository.BulkInsertStocks(ctx, stocks); err != nil {
 		return err
 	}
 
-	log.Printf("successfully inserted %d stocks into the database", len(formattedStocks))
+	log.Printf("successfully inserted %d stocks into the database", len(stocks))
 
 	return nil
 }

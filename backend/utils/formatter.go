@@ -30,10 +30,10 @@ func Formatter(stock *models.Stock) (*models.FormattedStock, error) {
 		TargetFrom: formattedTargetFrom,
 		TargetTo:   formattedTargetTo,
 		Company:    stock.Company,
-		Action:     stock.Action,
+		Action:     formatAction(stock.Action),
 		Brokerage:  stock.Brokerage,
-		RatingFrom: stock.RatingFrom,
-		RatingTo:   stock.RatingTo,
+		RatingFrom: formatRating(stock.RatingFrom),
+		RatingTo:   formatRating(stock.RatingTo),
 		Time:       formattedTime,
 	}, nil
 }
@@ -48,6 +48,22 @@ func formatTarget(target string) (float64, error) {
 	}
 
 	return value, nil
+}
+
+func formatRating(rating string) string {
+	formattedRating := strings.TrimSpace(strings.ToLower(rating))
+	if len(formattedRating) == 0 {
+		return "neutral"
+	}
+	return formattedRating
+}
+
+func formatAction(action string) string {
+	formattedAction := strings.TrimSpace(strings.ToLower(action))
+	if len(formattedAction) == 0 {
+		return "initiated by"
+	}
+	return formattedAction
 }
 
 func formatTime(timeStr string) (time.Time, error) {
