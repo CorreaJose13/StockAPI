@@ -20,7 +20,6 @@ type Response struct {
 }
 
 type FormattedStock struct {
-	ID         int64     `json:"id"`
 	Ticker     string    `json:"ticker"`
 	TargetFrom float64   `json:"target_from"`
 	TargetTo   float64   `json:"target_to"`
@@ -30,4 +29,5 @@ type FormattedStock struct {
 	RatingFrom string    `json:"rating_from"`
 	RatingTo   string    `json:"rating_to"`
 	Time       time.Time `json:"time"`
+	Score      float64   `json:"score"`
 }

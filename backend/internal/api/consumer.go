@@ -4,28 +4,27 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/CorreaJose13/StockAPI/config"
 	"github.com/CorreaJose13/StockAPI/models"
 )
 
-type APIConsumer struct {
+type apiConsumer struct {
 	client    *http.Client
 	apiURL    string
 	authToken string
 }
 
-func NewAPIConsumer(cfg *config.Config) *APIConsumer {
-	return &APIConsumer{
+func NewAPIConsumer(cfg *config.Config) *apiConsumer {
+	return &apiConsumer{
 		client:    &http.Client{},
 		apiURL:    cfg.APIURL,
 		authToken: "Bearer " + cfg.BearerToken,
 	}
 }
 
-func (ac *APIConsumer) FetchStocks() ([]models.Stock, error) {
+func (ac *apiConsumer) FetchStocks() ([]models.Stock, error) {
 	var stocks []models.Stock
 	nextPage := ""
 
@@ -34,8 +33,6 @@ func (ac *APIConsumer) FetchStocks() ([]models.Stock, error) {
 		if nextPage != "" {
 			url += "?next_page=" + nextPage
 		}
-
-		log.Printf("fetching stocks from: %s", url)
 
 		body, err := ac.doRequest(url)
 		if err != nil {
@@ -54,7 +51,7 @@ func (ac *APIConsumer) FetchStocks() ([]models.Stock, error) {
 	return stocks, nil
 }
 
-func (ac *APIConsumer) doRequest(url string) (*models.Response, error) {
+func (ac *apiConsumer) doRequest(url string) (*models.Response, error) {
 
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
@@ -77,7 +74,7 @@ func (ac *APIConsumer) doRequest(url string) (*models.Response, error) {
 	}
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("API returned status code: %d and body: %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("api returned status code: %d and body: %s", resp.StatusCode, string(body))
 	}
 
 	var response models.Response
