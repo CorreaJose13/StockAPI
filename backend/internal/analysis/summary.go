@@ -1,10 +1,10 @@
 package analysis
 
 type StockSummary struct {
-	TotalStocks    int
-	PositiveChange int
-	NegativeChange int
-	NoChange       int
+	TotalStocks    int `json:"total_stocks"`
+	PositiveChange int `json:"positive_change"`
+	NegativeChange int `json:"negative_change"`
+	NoChange       int `json:"no_change"`
 }
 
 func (a *Analysis) GetSummary() *StockSummary {
