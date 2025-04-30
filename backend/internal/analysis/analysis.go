@@ -1,8 +1,7 @@
 package analysis
 
 import (
-	"fmt"
-	"log"
+	"sort"
 	"strings"
 
 	"slices"
@@ -39,7 +38,12 @@ type Analysis struct {
 	Stocks []*models.FormattedStock
 }
 
-type stockMetrics struct {
+type StockAnalysis struct {
+	*models.FormattedStock
+	Score float64 `json:"score"`
+}
+
+type StockMetrics struct {
 	brokerageMap  map[string]int
 	maxPercChange float64
 	minPercChange float64
@@ -55,37 +59,53 @@ func NewAnalysis(stocks []*models.FormattedStock) *Analysis {
 	}
 }
 
-func (a *Analysis) Analyze() {
+func (a *Analysis) Analyze() []*StockAnalysis {
 
 	metrics := a.computeStockMetrics()
 
+	var stocksAnalysis []*StockAnalysis
 	for _, stock := range a.Stocks {
-		percChange := percentageChange(stock.TargetFrom, stock.TargetTo)
-		absChange := absoluteChange(stock.TargetFrom, stock.TargetTo)
-		timeValue := stock.Time.Unix()
-		percChangeScore := normalizeValue(percChange, metrics.minPercChange, metrics.maxPercChange)
-		absChangeScore := normalizeValue(absChange, metrics.minAbsChange, metrics.maxAbsChange)
-		timeScore := normalizeValue(float64(timeValue), float64(metrics.oldestTime), float64(metrics.newestTime))
-		brokerageScore := a.brokerageScore(metrics.brokerageMap, stock.Brokerage)
-		ratingScore := mapRatingToFloat(stock.RatingTo)
-		ratingDiffScore := ratingDifference(stock.RatingFrom, stock.RatingTo)
-		actionValue := mapActionToFloat(stock.Action)
 
-		overallScore := (percChangeScore * percChangeWeight) +
-			(absChangeScore * absChangeWeight) +
-			(timeScore * timeWeight) +
-			(brokerageScore * brokerageWeight) +
-			(ratingScore * ratingWeight) +
-			(ratingDiffScore * ratingDiffWeight) +
-			(actionValue * actionWeight)
-		fmt.Println(overallScore)
+		score := a.calculateScore(stock, metrics)
+
+		stocksAnalysis = append(stocksAnalysis, &StockAnalysis{
+			FormattedStock: stock,
+			Score:          score})
 	}
 
-	log.Println("analysis completed")
+	sort.Slice(stocksAnalysis, func(i, j int) bool {
+		return stocksAnalysis[i].Score > stocksAnalysis[j].Score
+	})
 
+	resultLimit := min(len(stocksAnalysis), 10)
+
+	return stocksAnalysis[:resultLimit]
 }
 
-func (a *Analysis) computeStockMetrics() *stockMetrics {
+func (a *Analysis) calculateScore(stock *models.FormattedStock, metrics *StockMetrics) float64 {
+	percChange := percentageChange(stock.TargetFrom, stock.TargetTo)
+	absChange := absoluteChange(stock.TargetFrom, stock.TargetTo)
+	timeValue := stock.Time.Unix()
+	percChangeScore := normalizeValue(percChange, metrics.minPercChange, metrics.maxPercChange)
+	absChangeScore := normalizeValue(absChange, metrics.minAbsChange, metrics.maxAbsChange)
+	timeScore := normalizeValue(float64(timeValue), float64(metrics.oldestTime), float64(metrics.newestTime))
+	brokerageScore := a.brokerageScore(metrics.brokerageMap, stock.Brokerage)
+	ratingScore := mapRatingToFloat(stock.RatingTo)
+	ratingDiffScore := ratingDifference(stock.RatingFrom, stock.RatingTo)
+	actionValue := mapActionToFloat(stock.Action)
+
+	overallScore := (percChangeScore * percChangeWeight) +
+		(absChangeScore * absChangeWeight) +
+		(timeScore * timeWeight) +
+		(brokerageScore * brokerageWeight) +
+		(ratingScore * ratingWeight) +
+		(ratingDiffScore * ratingDiffWeight) +
+		(actionValue * actionWeight)
+
+	return overallScore
+}
+
+func (a *Analysis) computeStockMetrics() *StockMetrics {
 	// Initialize variables
 	stock := a.Stocks[0]
 	frequency := make(map[string]int)
@@ -112,7 +132,7 @@ func (a *Analysis) computeStockMetrics() *stockMetrics {
 		minTime = int64(minTimeF)
 		maxTime = int64(maxTimeF)
 	}
-	return &stockMetrics{
+	return &StockMetrics{
 		brokerageMap:  frequency,
 		maxPercChange: maxPerc,
 		minPercChange: minPerc,
