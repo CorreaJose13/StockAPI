@@ -29,5 +29,4 @@ type FormattedStock struct {
 	RatingFrom string    `json:"rating_from"`
 	RatingTo   string    `json:"rating_to"`
 	Time       time.Time `json:"time"`
-	Score      float64   `json:"score"`
 }
