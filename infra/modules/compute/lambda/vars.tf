@@ -1,4 +1,3 @@
-#Required variables
 variable "function_name" {
   description = "Name for the Lambda function"
   type        = string
@@ -19,7 +18,6 @@ variable "s3_key" {
   type        = string
 }
 
-#Optional variables
 variable "description" {
   description = "Description for the Lambda function"
   type        = string
@@ -29,35 +27,29 @@ variable "description" {
 variable "runtime" {
   description = "The runtime for the Lambda function"
   type        = string
-  default     = "provided.al2"
 }
 
 variable "handler" {
   description = "The handler for the Lambda function"
   type        = string
-  default     = "bootstrap"
 }
 
 variable "timeout" {
   description = "Lambda function timeout in seconds"
   type        = number
-  default     = 300
 }
 
 variable "memory_size" {
   description = "Lambda function memory size in MB"
   type        = number
-  default     = 128
 }
 
 variable "env_vars" {
   description = "Environment variables for the Lambda function"
   type        = map(string)
-  default     = {}
 }
 
 variable "log_retention_days" {
   description = "CloudWatch log retention period in days"
   type        = number
-  default     = 7
 }
