@@ -1,6 +1,7 @@
 package analysis
 
 import (
+	"fmt"
 	"log"
 	"strings"
 
@@ -65,7 +66,7 @@ func (a *Analysis) Analyze() {
 		percChangeScore := normalizeValue(percChange, metrics.minPercChange, metrics.maxPercChange)
 		absChangeScore := normalizeValue(absChange, metrics.minAbsChange, metrics.maxAbsChange)
 		timeScore := normalizeValue(float64(timeValue), float64(metrics.oldestTime), float64(metrics.newestTime))
-		brokerageScore := a.brokerageScore(metrics.brokerageMap, stock.Brokerage, a.getStocksCount())
+		brokerageScore := a.brokerageScore(metrics.brokerageMap, stock.Brokerage)
 		ratingScore := mapRatingToFloat(stock.RatingTo)
 		ratingDiffScore := ratingDifference(stock.RatingFrom, stock.RatingTo)
 		actionValue := mapActionToFloat(stock.Action)
@@ -77,7 +78,7 @@ func (a *Analysis) Analyze() {
 			(ratingScore * ratingWeight) +
 			(ratingDiffScore * ratingDiffWeight) +
 			(actionValue * actionWeight)
-		stock.Score = overallScore
+		fmt.Println(overallScore)
 	}
 
 	log.Println("analysis completed")
@@ -165,7 +166,7 @@ func (a *Analysis) brokerageRelativeFrequency(brokerageFrequencyMap map[string]i
 	return float64(brokFreq) / float64(a.getStocksCount())
 }
 
-func (a *Analysis) brokerageScore(brokerageFrequencyMap map[string]int, brokerage string, lenStocks int) float64 {
+func (a *Analysis) brokerageScore(brokerageFrequencyMap map[string]int, brokerage string) float64 {
 	bRating := brokerageRating(brokerage)
 	bRelFreq := a.brokerageRelativeFrequency(brokerageFrequencyMap, brokerage)
 	return bRating * bRelFreq

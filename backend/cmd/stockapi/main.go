@@ -5,7 +5,6 @@ import (
 	"log"
 
 	"github.com/CorreaJose13/StockAPI/config"
-	"github.com/CorreaJose13/StockAPI/internal/analysis"
 	"github.com/CorreaJose13/StockAPI/internal/api"
 	"github.com/CorreaJose13/StockAPI/internal/db"
 	"github.com/CorreaJose13/StockAPI/internal/repository"
@@ -39,10 +38,7 @@ func main() {
 		formattedStocks = append(formattedStocks, formattedStock)
 	}
 
-	analysis := analysis.NewAnalysis(formattedStocks)
-	analysis.Analyze()
-
-	if err := bulkInsert(ctx, analysis.Stocks); err != nil {
+	if err := bulkInsert(ctx, formattedStocks); err != nil {
 		log.Fatalf("failed to bulk insert stocks: %v", err)
 	}
 }
