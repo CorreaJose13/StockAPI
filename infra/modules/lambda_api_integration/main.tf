@@ -38,6 +38,7 @@ module "lambda_function" {
 module "api_endpoint" {
   source           = "../network/api_gateway_endpoint/"
   api_gateway_name = var.api_gateway_name
+  parent_id        = var.parent_id
   path             = var.endpoint_path
   method           = var.http_method
   stage            = var.stage
