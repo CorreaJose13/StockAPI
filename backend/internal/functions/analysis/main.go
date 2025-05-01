@@ -27,8 +27,6 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return events.APIGatewayProxyResponse{}, initErr
 	}
 
-	defer repo.Close()
-
 	stocks, err := repository.GetStocks(ctx)
 	if err != nil {
 		return response.Error(http.StatusInternalServerError, err.Error())

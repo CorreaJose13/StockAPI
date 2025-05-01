@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"net/http"
+	"strconv"
 
 	"github.com/CorreaJose13/StockAPI/internal/api/response"
 	"github.com/CorreaJose13/StockAPI/internal/db"
@@ -23,12 +24,13 @@ func init() {
 
 func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	if initErr != nil {
-		return events.APIGatewayProxyResponse{}, initErr
+		return response.Error(http.StatusInternalServerError, initErr.Error())
 	}
 
-	defer repo.Close()
+	page, _ := strconv.Atoi(req.QueryStringParameters["page"])
+	limit, _ := strconv.Atoi(req.QueryStringParameters["limit"])
 
-	stocks, err := repository.GetStocks(ctx)
+	stocks, err := repository.GetStocksPaginated(ctx, page, limit)
 	if err != nil {
 		return response.Error(http.StatusInternalServerError, err.Error())
 	}
