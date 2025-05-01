@@ -53,8 +53,13 @@ variable "endpoint_name" {
   type        = string
 }
 
-variable "api_gateway_name" {
+variable "rest_api_id" {
   description = "The name of the API Gateway"
+  type        = string
+}
+
+variable "rest_api_exec_arn" {
+  description = "The execution ARN of the API Gateway"
   type        = string
 }
 

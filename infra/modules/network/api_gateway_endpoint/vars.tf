@@ -1,5 +1,10 @@
-variable "api_gateway_name" {
+variable "rest_api_id" {
   description = "Name of the api gateway"
+  type        = string
+}
+
+variable "rest_api_exec_arn" {
+  description = "Execution ARN of the api gateway"
   type        = string
 }
 
@@ -25,5 +30,10 @@ variable "stage" {
 
 variable "lambda_name" {
   description = "Name of the lambda function"
+  type        = string
+}
+
+variable "lambda_invoke_arn" {
+  description = "Lambda function ARN"
   type        = string
 }
