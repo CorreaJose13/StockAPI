@@ -4,7 +4,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/CorreaJose13/StockAPI/internal/analysis"
 	"github.com/CorreaJose13/StockAPI/internal/api/response"
 	"github.com/CorreaJose13/StockAPI/internal/db"
 	"github.com/CorreaJose13/StockAPI/internal/functions"
@@ -34,9 +33,7 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return response.Error(http.StatusInternalServerError, err.Error())
 	}
 
-	analysis := analysis.NewAnalysis(stocks)
-
-	return response.Success(analysis.Analyze())
+	return response.Success(stocks)
 }
 
 func main() {
