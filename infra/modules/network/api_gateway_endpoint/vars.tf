@@ -3,6 +3,11 @@ variable "api_gateway_name" {
   type        = string
 }
 
+variable "parent_id" {
+  description = "ID of the parent resource"
+  type        = string
+}
+
 variable "path" {
   description = "Path of the api gateway resource"
   type        = string

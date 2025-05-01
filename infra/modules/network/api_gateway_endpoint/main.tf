@@ -8,7 +8,7 @@ data "aws_lambda_function" "this" {
 
 resource "aws_api_gateway_resource" "this" {
   rest_api_id = data.aws_api_gateway_rest_api.this.id
-  parent_id   = data.aws_api_gateway_rest_api.this.root_resource_id
+  parent_id   = var.parent_id
   path_part   = var.path
 }
 
