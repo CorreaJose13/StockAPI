@@ -90,6 +90,32 @@ func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.Forma
 	}
 	defer rows.Close()
 
+	stocks, err := scanRows(rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan stocks: %w", err)
+	}
+
+	return stocks, nil
+}
+
+func (repo *CockRoachRepository) GetStocksPaginated(ctx context.Context, page, limit int) ([]*models.FormattedStock, error) {
+	offset := (page - 1) * limit
+	query := "SELECT * FROM stocks ORDER BY ticker ASC LIMIT $1 OFFSET $2"
+	rows, err := repo.db.QueryContext(ctx, query, limit, offset)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query stocks: %w", err)
+	}
+	defer rows.Close()
+
+	stocks, err := scanRows(rows)
+	if err != nil {
+		return nil, fmt.Errorf("failed to scan stocks: %w", err)
+	}
+
+	return stocks, nil
+}
+
+func scanRows(rows *sql.Rows) ([]*models.FormattedStock, error) {
 	var stocks []*models.FormattedStock
 	for rows.Next() {
 		var stock models.FormattedStock
@@ -104,10 +130,9 @@ func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.Forma
 			&stock.RatingTo,
 			&stock.Time,
 		); err != nil {
-			return nil, fmt.Errorf("failed to scan stock: %w", err)
+			return nil, err
 		}
 		stocks = append(stocks, &stock)
 	}
-
 	return stocks, nil
 }

@@ -29,20 +29,16 @@ variable "handler" {
 variable "timeout" {
   description = "The timeout for the Lambda function in seconds"
   type        = number
-  default     = 1
 }
 
 variable "memory_size" {
   description = "The memory size for the Lambda function in MB"
   type        = number
-  default     = 128
 }
 
 variable "log_retention_days" {
   description = "The number of days to retain logs for the Lambda function"
   type        = number
-  default     = 7
-
 }
 
 variable "env_vars" {
@@ -57,15 +53,24 @@ variable "endpoint_name" {
   type        = string
 }
 
-variable "api_gateway_name" {
+variable "rest_api_id" {
   description = "The name of the API Gateway"
+  type        = string
+}
+
+variable "rest_api_exec_arn" {
+  description = "The execution ARN of the API Gateway"
+  type        = string
+}
+
+variable "parent_id" {
+  description = "The ID of the parent resource in the API Gateway"
   type        = string
 }
 
 variable "http_method" {
   description = "The HTTP method for the API Gateway endpoint"
   type        = string
-  default     = "GET"
 }
 
 variable "endpoint_path" {

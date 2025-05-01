@@ -9,6 +9,7 @@ import (
 type StockRepository interface {
 	BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error
 	GetStocks(ctx context.Context) ([]*models.FormattedStock, error)
+	GetStocksPaginated(ctx context.Context, page, limit int) ([]*models.FormattedStock, error)
 	Close() error
 }
 
@@ -24,6 +25,10 @@ func BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) erro
 
 func GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
 	return stockRepoImpl.GetStocks(ctx)
+}
+
+func GetStocksPaginated(ctx context.Context, page, limit int) ([]*models.FormattedStock, error) {
+	return stockRepoImpl.GetStocksPaginated(ctx, page, limit)
 }
 
 func Close() error {

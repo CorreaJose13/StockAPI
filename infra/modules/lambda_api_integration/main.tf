@@ -3,6 +3,9 @@ locals {
 }
 
 resource "terraform_data" "this" {
+  triggers_replace = {
+    lambda_source_path = filebase64sha256(var.lambda_source_path)
+  }
   provisioner "local-exec" {
     working_dir = dirname(var.lambda_source_path)
     command     = "make publish"
@@ -36,12 +39,14 @@ module "lambda_function" {
 }
 
 module "api_endpoint" {
-  source           = "../network/api_gateway_endpoint/"
-  api_gateway_name = var.api_gateway_name
-  path             = var.endpoint_path
-  method           = var.http_method
-  stage            = var.stage
-  lambda_name      = module.lambda_function.name
+  source            = "../network/api_gateway_endpoint/"
+  rest_api_id       = var.rest_api_id
+  rest_api_exec_arn = var.rest_api_exec_arn
+  parent_id         = var.parent_id
+  path              = var.endpoint_path
+  method            = var.http_method
+  stage             = var.stage
 
-  depends_on = [module.lambda_function, var.api_gateway_name]
+  lambda_name       = module.lambda_function.name
+  lambda_invoke_arn = module.lambda_function.invoke_arn
 }

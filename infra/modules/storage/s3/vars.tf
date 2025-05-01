@@ -8,9 +8,3 @@ variable "force_destroy" {
   type        = bool
   default     = false
 }
-
-variable "versioning" {
-  description = "Whether to enable versioning on the bucket"
-  type        = bool
-  default     = true
-}

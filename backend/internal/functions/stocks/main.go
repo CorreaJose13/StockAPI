@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"net/http"
+	"strconv"
 
-	"github.com/CorreaJose13/StockAPI/internal/analysis"
 	"github.com/CorreaJose13/StockAPI/internal/api/response"
 	"github.com/CorreaJose13/StockAPI/internal/db"
 	"github.com/CorreaJose13/StockAPI/internal/functions"
@@ -24,17 +24,18 @@ func init() {
 
 func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {
 	if initErr != nil {
-		return events.APIGatewayProxyResponse{}, initErr
+		return response.Error(http.StatusInternalServerError, initErr.Error())
 	}
 
-	stocks, err := repository.GetStocks(ctx)
+	page, _ := strconv.Atoi(req.QueryStringParameters["page"])
+	limit, _ := strconv.Atoi(req.QueryStringParameters["limit"])
+
+	stocks, err := repository.GetStocksPaginated(ctx, page, limit)
 	if err != nil {
 		return response.Error(http.StatusInternalServerError, err.Error())
 	}
 
-	analysis := analysis.NewAnalysis(stocks)
-
-	return response.Success(analysis.GetSummary())
+	return response.Success(stocks)
 }
 
 func main() {
