@@ -8,11 +8,12 @@ type StockSummary struct {
 }
 
 func (a *Analysis) GetSummary() *StockSummary {
+	countPositive, countNegative, countNeutral := a.countStocksByChangeTrend()
 	return &StockSummary{
 		TotalStocks:    a.getStocksCount(),
-		PositiveChange: a.positiveChange(),
-		NegativeChange: a.negativeChange(),
-		NoChange:       a.noChange(),
+		PositiveChange: countPositive,
+		NegativeChange: countNegative,
+		NoChange:       countNeutral,
 	}
 }
 
@@ -20,37 +21,21 @@ func (a *Analysis) getStocksCount() int {
 	return len(a.Stocks)
 }
 
-func (a *Analysis) countStocksByChangeTrend(trend string) int {
-	count := 0
+func (a *Analysis) countStocksByChangeTrend() (countPositive, countNegative, countNeutral int) {
+	countPositive = 0
+	countNegative = 0
+	countNeutral = 0
 	for _, stock := range a.Stocks {
 		change := percentageChange(stock.TargetFrom, stock.TargetTo)
-
-		switch trend {
-		case "positive":
-			if change > 0 {
-				count++
-			}
-		case "negative":
-			if change < 0 {
-				count++
-			}
-		case "no-change":
-			if change == 0 {
-				count++
-			}
+		if change > 0 {
+			countPositive++
+		}
+		if change < 0 {
+			countNegative++
+		}
+		if change == 0 {
+			countNeutral++
 		}
 	}
-	return count
-}
-
-func (a *Analysis) positiveChange() int {
-	return a.countStocksByChangeTrend("positive")
-}
-
-func (a *Analysis) negativeChange() int {
-	return a.countStocksByChangeTrend("negative")
-}
-
-func (a *Analysis) noChange() int {
-	return a.countStocksByChangeTrend("no-change")
+	return
 }
