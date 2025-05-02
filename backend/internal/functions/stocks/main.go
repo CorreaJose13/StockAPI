@@ -29,13 +29,26 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 
 	page, _ := strconv.Atoi(req.QueryStringParameters["page"])
 	limit, _ := strconv.Atoi(req.QueryStringParameters["limit"])
+	field := req.QueryStringParameters["field"]
+	order := req.QueryStringParameters["order"]
+	search := req.QueryStringParameters["search"]
 
-	stocks, err := repository.GetStocksPaginated(ctx, page, limit)
+	stocks, err := repository.GetStocksFiltered(ctx, field, order, search, page, limit)
 	if err != nil {
 		return response.Error(http.StatusInternalServerError, err.Error())
 	}
 
-	return response.Success(stocks)
+	stocksLength, err := repository.GetTableLength(ctx)
+	if err != nil {
+		return response.Error(http.StatusInternalServerError, err.Error())
+	}
+
+	responseBody := map[string]any{
+		"stocks": stocks,
+		"length": stocksLength,
+	}
+
+	return response.Success(responseBody)
 }
 
 func main() {
