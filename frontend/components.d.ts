@@ -23,7 +23,6 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SearchIcon: typeof import('./src/components/icons/SearchIcon.vue')['default']
     StockCard: typeof import('./src/components/StockCard.vue')['default']
-    StockTrendingWidget: typeof import('./src/components/StockTrendingWidget.vue')['default']
     Tag: typeof import('primevue/tag')['default']
   }
 }
