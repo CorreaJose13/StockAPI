@@ -29,10 +29,24 @@ resource "aws_lambda_permission" "this" {
   source_arn    = "${var.rest_api_exec_arn}/*/*/*"
 }
 
-// TO DO: Add CORS configuration
-# resource "aws_api_gateway_method" "options" {
-#   rest_api_id   = data.aws_api_gateway_rest_api.this.id
-#   resource_id   = aws_api_gateway_resource.this.id
-#   http_method   = "OPTIONS"
-#   authorization = "NONE"
-# }
+# CORS configuration
+resource "aws_api_gateway_method" "options" {
+  rest_api_id   = var.rest_api_id
+  resource_id   = aws_api_gateway_resource.this.id
+  http_method   = "OPTIONS"
+  authorization = "NONE"
+}
+
+# Integración para el método OPTIONS
+resource "aws_api_gateway_integration" "options" {
+  rest_api_id = var.rest_api_id
+  resource_id = aws_api_gateway_resource.this.id
+  http_method = aws_api_gateway_method.options.http_method
+  type        = "MOCK"
+  request_templates = {
+    "application/json" = jsonencode({
+      statusCode = 200
+    })
+  }
+}
+
