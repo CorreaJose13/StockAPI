@@ -30,7 +30,7 @@ const insightTexts = computed(() => {
 })
 </script>
 <template>
-  <div class="max-w-screen-xl max-h-screen mx-auto p-4">
+  <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
     <section class="flex flex-col gap-1 w-full py-4">
       <h1 class="text-3xl font-bold text-start text-black">{{ insightTexts.title }}</h1>
       <p class="text-start text-gray-600">

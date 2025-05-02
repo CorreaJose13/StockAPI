@@ -14,9 +14,9 @@ const navItems = computed(() => {
 <template>
   <div class="flex flex-col min-h-screen">
     <header>
-      <div class="w-full text-gray-700 bg-white">
+      <div class="w-full text-black bg-white">
         <div
-          class="flex flex-col max-w-screen-xl px-4 mx-auto md:items-center md:justify-between md:flex-row md:px-6 lg:px-8"
+          class="flex flex-col max-w-screen-2xl mx-auto md:items-center md:justify-between md:flex-row"
         >
           <div class="flex flex-row items-center justify-between p-4">
             <img :src="logo" alt="Logo" class="h-8 w-auto mr-2" />
@@ -37,7 +37,7 @@ const navItems = computed(() => {
       </div>
     </header>
 
-    <main class="flex-grow bg-gray-100">
+    <main class="flex-grow bg-gradient-to-r from-blue-900 via-blue-700 to-blue-800">
       <RouterView />
     </main>
   </div>

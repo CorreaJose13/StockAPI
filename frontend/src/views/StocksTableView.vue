@@ -1,128 +1,232 @@
 <script setup lang="ts">
-import { useStockData } from '@/composables/stocks'
-import { computed } from 'vue'
-import SearchIcon from '@/components/icons/SearchIcon.vue'
+import { onMounted, ref, computed, watch } from 'vue'
+import { getStocksList } from '@/composables/stocks'
+import type { Stock } from '@/types/types'
+import { useDebounceFn } from '@vueuse/core'
 
-const stocks = useStockData()
-const tableHeaders = computed(() => {
-  return [
-    'Ticker',
-    'Company',
-    'Brokerage',
-    'Action',
-    'Rating from',
-    'Rating to',
-    'Target from',
-    'Target to',
-  ]
+const stocks = ref<Stock[]>([])
+const totalStocks = ref(0)
+const loading = ref(false)
+
+const currentPage = ref(1)
+const limit = ref(10)
+const field = ref('')
+const order = ref(0)
+const searchQuery = ref('')
+
+const onPage = (event: any) => {
+  currentPage.value = event.page + 1
+  limit.value = event.rows
+  loadStocks(currentPage.value, limit.value, field.value, order.value)
+}
+
+const onSort = (event: any) => {
+  field.value = event.sortField
+  order.value = event.sortOrder
+  loadStocks(currentPage.value, limit.value, field.value, order.value)
+}
+
+const debouncedSearch = useDebounceFn((query: string) => {
+  currentPage.value = 1 // Resetear a la primera página al buscar
+  loadStocks(currentPage.value, limit.value, field.value, order.value, query)
+}, 300)
+
+watch(searchQuery, (newValue) => {
+  debouncedSearch(newValue)
 })
-const tableTexts = computed(() => {
-  return {
-    title: 'Projects with Invoices',
-    subtitle: 'Overview of the current activities.',
-    searchPlaceholder: 'Search for stock...',
+
+const getRatingSeverity = (rating: string) => {
+  switch (rating) {
+    case 'sell':
+      return 'danger'
+    case 'buy':
+      return 'success'
+    case 'outperform':
+      return 'info'
+    case 'underperform':
+      return 'warn'
+    case 'hold':
+      return 'secondary'
+    default:
+      return 'secondary'
   }
+}
+const getTargetSeverity = (targetFrom: number, targetTo: number) => {
+  const targetDiff = targetTo - targetFrom
+  if (targetDiff > 0) {
+    return 'success'
+  } else if (targetDiff < 0) {
+    return 'danger'
+  } else {
+    return 'secondary'
+  }
+}
+
+const stocksTableTexts = computed(() => {
+  return {
+    title: 'Stock Data Overview',
+    description:
+      'Quickly view stock tickers, companies, brokerage actions, ratings, and target prices.',
+    placeholder: 'Search by ticker, company, or brokerage',
+  }
+})
+
+const loadStocks = async (
+  page: number,
+  limit: number,
+  field?: string,
+  order?: number,
+  query?: string,
+) => {
+  let orderString = order === -1 ? 'desc' : 'asc'
+  loading.value = true
+  try {
+    const result = await getStocksList(page, limit, field, orderString, query)
+    stocks.value = result.stocks
+    totalStocks.value = result.length
+  } catch (error) {
+    console.error('Error fetching stocks:', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+onMounted(() => {
+  loadStocks(currentPage.value, limit.value)
 })
 </script>
 <template>
-  <div class="max-w-screen-xl max-h-screen mx-auto p-4">
-    <div class="w-full flex justify-between items-center mb-3 mt-1">
-      <div>
-        <h3 class="text-lg font-semibold text-black">{{ tableTexts.title }}</h3>
-        <p class="text-gray-500">{{ tableTexts.subtitle }}</p>
+  <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
+    <section class="flex flex-col gap-1 w-full py-4">
+      <h1 class="text-3xl font-bold text-start text-white">{{ stocksTableTexts.title }}</h1>
+      <p class="text-start text-slate-200">
+        {{ stocksTableTexts.description }}
+      </p>
+    </section>
+    <section>
+      <div class="flex justify-start mb-4">
+        <IconField>
+          <InputIcon>
+            <i class="pi pi-search" />
+          </InputIcon>
+          <InputText
+            v-model="searchQuery"
+            :placeholder="stocksTableTexts.placeholder"
+            class="w-xl"
+          />
+        </IconField>
       </div>
-      <div class="ml-3">
-        <div class="w-full max-w-md min-w-xs">
-          <div class="relative">
-            <input
-              class="bg-white w-full pr-11 h-10 pl-3 py-2 placeholder:text-gray-400 text-black text-sm border border-gray-200 rounded transition duration-200 ease focus:outline-none focus:border-gray-500 hover:border-gray-400 shadow-sm focus:shadow-md"
-              :placeholder="tableTexts.searchPlaceholder"
-            />
-            <SearchIcon />
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div
-      class="relative flex flex-col w-full h-full overflow-scroll text-gray-700 bg-white shadow-md rounded-lg bg-clip-border"
-    >
-      <table class="w-full text-left table-auto min-w-max">
-        <thead>
-          <tr>
-            <th
-              v-for="header in tableHeaders"
-              :key="header"
-              class="p-4 border-b border-slate-200 bg-slate-50"
-            >
-              <p class="text-sm font-normal leading-none uppercase text-gray-700">{{ header }}</p>
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="stock in stocks"
-            :key="stock.id"
-            class="hover:bg-slate-50 border-b border-slate-200"
+      <DataTable
+        :value="stocks"
+        :totalRecords="totalStocks"
+        :loading="loading"
+        :lazy="true"
+        paginator
+        :first="(currentPage - 1) * limit"
+        :rows="limit"
+        :rowsPerPageOptions="[10, 20, 50, 100]"
+        @page="onPage"
+        scrollable
+        scrollHeight="40rem"
+        :sortField="field"
+        :sortOrder="order"
+        @sort="onSort"
+      >
+        <Column
+          field="ticker"
+          header="TICKER"
+          class="text-sm font-bold text-black"
+          style="width: 5%"
+          sortable
+        >
+          <template #body="{ data }">
+            {{ data.ticker }}
+          </template>
+        </Column>
+        <Column
+          field="company"
+          header="COMPANY"
+          class="text-sm text-black"
+          style="width: 20%"
+          sortable
+        >
+          <template #body="{ data }">
+            {{ data.company }}
+          </template>
+          ></Column
+        >
+        <Column
+          field="brokerage"
+          header="BROKERAGE"
+          class="text-sm text-black"
+          style="width: 15%"
+          sortable
+        >
+          <template #body="{ data }">
+            {{ data.brokerage }}
+          </template>
+          ></Column
+        >
+        <Column field="action" header="ACTION" class="text-sm text-black capitalize">
+          <template #body="{ data }">
+            <span class="">
+              {{ data.action }}
+            </span>
+          </template>
+          ></Column
+        >
+        <Column field="rating" header="RATING" class="text-sm text-black" style="width: 25%">
+          <template #body="{ data }">
+            <div class="flex flex-row gap-2 items-center">
+              <Tag
+                class="capitalize text-sm"
+                :value="data.rating_from"
+                :severity="getRatingSeverity(data.rating_from)"
+              />
+              <i class="pi pi-arrow-right text-gray-500" style="font-size: 0.75rem"></i>
+              <Tag
+                class="capitalize text-sm"
+                :value="data.rating_to"
+                :severity="getRatingSeverity(data.rating_to)"
+              />
+            </div>
+          </template>
+          ></Column
+        >
+        <Column field="target" header="TARGET" class="text-sm text-black" style="width: 15%">
+          <template #body="{ data }">
+            <div class="flex flex-row gap-2 items-center">
+              <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
+              <i
+                :class="[
+                  data.target_from < data.target_to
+                    ? 'pi pi-arrow-up text-green-500'
+                    : data.target_from > data.target_to
+                      ? 'pi pi-arrow-down text-red-500'
+                      : 'pi pi-arrow-right text-gray-500',
+                ]"
+                style="font-size: 0.75rem"
+              ></i>
+              <Tag
+                class="capitalize"
+                :severity="getTargetSeverity(data.target_from, data.target_to)"
+                >$ {{ data.target_to }}</Tag
+              >
+            </div></template
           >
-            <td class="p-4 py-5">
-              <span class="font-semibold text-sm text-black">{{ stock.ticker }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">{{ stock.company }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">{{ stock.brokerage }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">{{ stock.brokerage }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">{{ stock.ratingFrom }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">{{ stock.ratingTo }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">${{ stock.targetFrom }}</span>
-            </td>
-            <td class="p-4 py-5">
-              <span class="block text-sm text-gray-500">${{ stock.targetTo }}</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-
-      <div class="flex justify-between items-center px-4 py-3">
-        <div class="text-sm text-slate-500">Showing <b>1-5</b> of 45</div>
-        <div class="flex space-x-1">
-          <button
-            class="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
-          >
-            Prev
-          </button>
-          <button
-            class="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-white bg-slate-800 border border-slate-800 rounded hover:bg-slate-600 hover:border-slate-600 transition duration-200 ease"
-          >
-            1
-          </button>
-          <button
-            class="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
-          >
-            2
-          </button>
-          <button
-            class="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
-          >
-            3
-          </button>
-          <button
-            class="px-3 py-1 min-w-9 min-h-9 text-sm font-normal text-slate-500 bg-white border border-slate-200 rounded hover:bg-slate-50 hover:border-slate-400 transition duration-200 ease"
-          >
-            Next
-          </button>
-        </div>
-      </div>
-    </div>
+        </Column>
+        <Column field="time" header="DATE" class="text-sm text-black" style="width: 10%" sortable>
+          <template #body="{ data }">
+            {{
+              new Date(data.time).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric',
+              })
+            }}
+          </template>
+        </Column>
+      </DataTable>
+    </section>
   </div>
 </template>

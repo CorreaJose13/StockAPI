@@ -1,3 +1,34 @@
+import type { StockResponse, Stock } from '@/types/types'
+import axios from 'axios'
+import { API_URL } from '@/config/config'
+
+export const getStocksList = async (
+  page: number,
+  limit: number,
+  field?: string,
+  order?: string,
+  search?: string,
+) => {
+  try {
+    const response = await axios.get(`${API_URL}/stocks`, {
+      params: {
+        field,
+        order,
+        search,
+        page,
+        limit,
+      },
+    })
+    const data = response.data as StockResponse
+    const stockList = data.stocks as Stock[]
+    const totalStocks = data.length
+    return { status: response.status, stocks: stockList, length: totalStocks }
+  } catch (error) {
+    console.error('Fetching stocks failed: ' + error)
+    throw error
+  }
+}
+
 export const stocks = [
   {
     id: 1,
