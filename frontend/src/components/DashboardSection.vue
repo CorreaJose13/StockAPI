@@ -16,32 +16,42 @@ const props = defineProps({
     type: Array as () => Stock[],
     required: true,
   },
+  icon: {
+    type: String,
+  },
 })
 const limitedStocks = computed(() => {
-  return props.stocks.slice(0, 3)
+  return props.stocks.slice(0, 4)
 })
 </script>
 <template>
   <div>
     <section class="flex flex-row justify-between w-full py-4">
-      <h2 class="text-xl font-bold text-start text-black">{{ props.title }}</h2>
+      <div class="flex flex-row gap-2 justify-center items-center">
+        <i :class="['text-white', props.icon]"></i>
+        <h2 class="text-xl font-bold text-start text-white">{{ props.title }}</h2>
+      </div>
       <RouterLink
         :to="props.link"
-        class="p-2 text-sm rounded-lg text-gray-500 font-semibold hover:text-gray-900 focus:text-gray-900 hover:bg-gray-300 focus:bg-gray-300 focus:outline-none focus:shadow-outline"
-        >View all &gt;</RouterLink
+        class="p-2 text-sm rounded-lg text-white font-semibold hover:text-black hover:bg-white"
       >
+        <span class="flex flex-row gap-2 items-center justify-center">
+          <span>See all</span>
+          <i class="pi pi-arrow-right"></i>
+        </span>
+      </RouterLink>
     </section>
-    <section class="flex flex-col w-full md:flex-row justify-between">
+    <section class="flex flex-col w-full md:flex-row justify-between gap-4">
       <StockCard
         v-for="stock in limitedStocks"
-        :key="stock.id"
+        :key="stock.ticker"
         :ticker="stock.ticker"
         :action="stock.action"
         :company="stock.company"
-        :targetFrom="stock.targetFrom"
-        :targetTo="stock.targetTo"
-        :ratingFrom="stock.ratingFrom"
-        :ratingTo="stock.ratingTo"
+        :targetFrom="stock.target_from"
+        :targetTo="stock.target_to"
+        :ratingFrom="stock.rating_from"
+        :ratingTo="stock.rating_to"
         :brokerage="stock.brokerage"
         :time="stock.time"
       />

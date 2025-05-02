@@ -24,5 +24,6 @@ declare module 'vue' {
     SearchIcon: typeof import('./src/components/icons/SearchIcon.vue')['default']
     StockCard: typeof import('./src/components/StockCard.vue')['default']
     Tag: typeof import('primevue/tag')['default']
+    ViewHeader: typeof import('./src/components/ViewHeader.vue')['default']
   }
 }

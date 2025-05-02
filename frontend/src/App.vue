@@ -20,9 +20,10 @@ const navItems = computed(() => {
         >
           <div class="flex flex-row items-center justify-between p-4">
             <img :src="logo" alt="Logo" class="h-8 w-auto mr-2" />
-            <RouterLink class="text-lg font-semibold text-gray-900 uppercase" to="/">
-              Stock API</RouterLink
-            >
+            <RouterLink class="text-xl font-semibold flex" to="/">
+              <p class="text-blue-900">Stock</p>
+              <p class="text-blue-500">Wise</p>
+            </RouterLink>
           </div>
           <nav class="flex-col flex-grow hidden pb-4 md:pb-0 md:flex md:justify-end md:flex-row">
             <RouterLink
