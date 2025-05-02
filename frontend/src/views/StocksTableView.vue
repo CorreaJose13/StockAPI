@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue'
-import { getStocksList } from '@/composables/stocks'
+import { getStocksList, getStocksMetrics } from '@/composables/stocks'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
 
@@ -64,12 +64,16 @@ const getTargetSeverity = (targetFrom: number, targetTo: number) => {
 
 const stocksTableTexts = computed(() => {
   return {
-    title: 'Stock Data Overview',
+    title: 'Stock ratings overview',
     description:
       'Quickly view stock tickers, companies, brokerage actions, ratings, and target prices.',
     placeholder: 'Search by ticker, company, or brokerage',
   }
 })
+
+const rowClass = () => {
+  return 'cursor-pointer'
+}
 
 const loadStocks = async (
   page: number,
@@ -131,10 +135,12 @@ onMounted(() => {
         :sortField="field"
         :sortOrder="order"
         @sort="onSort"
+        :rowHover="true"
+        :rowClass="rowClass"
       >
         <Column
           field="ticker"
-          header="TICKER"
+          header="Ticker"
           class="text-sm font-bold text-black"
           style="width: 5%"
           sortable
@@ -145,7 +151,7 @@ onMounted(() => {
         </Column>
         <Column
           field="company"
-          header="COMPANY"
+          header="Company"
           class="text-sm text-black"
           style="width: 20%"
           sortable
@@ -157,7 +163,7 @@ onMounted(() => {
         >
         <Column
           field="brokerage"
-          header="BROKERAGE"
+          header="Analyst"
           class="text-sm text-black"
           style="width: 15%"
           sortable
@@ -167,7 +173,7 @@ onMounted(() => {
           </template>
           ></Column
         >
-        <Column field="action" header="ACTION" class="text-sm text-black capitalize">
+        <Column field="action" header="Action" class="text-sm text-black capitalize">
           <template #body="{ data }">
             <span class="">
               {{ data.action }}
@@ -175,7 +181,7 @@ onMounted(() => {
           </template>
           ></Column
         >
-        <Column field="rating" header="RATING" class="text-sm text-black" style="width: 25%">
+        <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
           <template #body="{ data }">
             <div class="flex flex-row gap-2 items-center">
               <Tag
@@ -193,7 +199,7 @@ onMounted(() => {
           </template>
           ></Column
         >
-        <Column field="target" header="TARGET" class="text-sm text-black" style="width: 15%">
+        <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
           <template #body="{ data }">
             <div class="flex flex-row gap-2 items-center">
               <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
@@ -215,7 +221,7 @@ onMounted(() => {
             </div></template
           >
         </Column>
-        <Column field="time" header="DATE" class="text-sm text-black" style="width: 10%" sortable>
+        <Column field="time" header="Date" class="text-sm text-black" style="width: 10%" sortable>
           <template #body="{ data }">
             {{
               new Date(data.time).toLocaleDateString('en-US', {
