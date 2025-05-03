@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue'
-import { getStocksList, getStocksMetrics } from '@/composables/stocks'
+import { getStocksList } from '@/composables/stocks'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
+import { getRatingSeverity, getTargetSeverity, getTargetArrow, formatDate } from '@/utils/stock'
 
 const stocks = ref<Stock[]>([])
 const totalStocks = ref(0)
@@ -27,40 +28,13 @@ const onSort = (event: any) => {
 }
 
 const debouncedSearch = useDebounceFn((query: string) => {
-  currentPage.value = 1 // Resetear a la primera página al buscar
+  currentPage.value = 1
   loadStocks(currentPage.value, limit.value, field.value, order.value, query)
 }, 300)
 
 watch(searchQuery, (newValue) => {
   debouncedSearch(newValue)
 })
-
-const getRatingSeverity = (rating: string) => {
-  switch (rating) {
-    case 'sell':
-      return 'danger'
-    case 'buy':
-      return 'success'
-    case 'outperform':
-      return 'info'
-    case 'underperform':
-      return 'warn'
-    case 'hold':
-      return 'secondary'
-    default:
-      return 'secondary'
-  }
-}
-const getTargetSeverity = (targetFrom: number, targetTo: number) => {
-  const targetDiff = targetTo - targetFrom
-  if (targetDiff > 0) {
-    return 'success'
-  } else if (targetDiff < 0) {
-    return 'danger'
-  } else {
-    return 'secondary'
-  }
-}
 
 const stocksTableTexts = computed(() => {
   return {
@@ -70,6 +44,49 @@ const stocksTableTexts = computed(() => {
     placeholder: 'Search by ticker, company, or brokerage',
   }
 })
+
+const tableColumns = computed(() => [
+  {
+    field: 'ticker',
+    header: 'Ticker',
+    class: 'text-sm font-bold text-black',
+    style: 'width: 5%',
+    sortable: true,
+    template: (data: any) => data.ticker,
+  },
+  {
+    field: 'company',
+    header: 'Company',
+    class: 'text-sm text-black',
+    style: 'width: 20%',
+    sortable: true,
+    template: (data: any) => data.company,
+  },
+  {
+    field: 'brokerage',
+    header: 'Analyst',
+    class: 'text-sm text-black',
+    style: 'width: 15%',
+    sortable: true,
+    template: (data: any) => data.brokerage,
+  },
+  {
+    field: 'time',
+    header: 'Date',
+    class: 'text-sm text-black',
+    style: 'width: 10%',
+    sortable: true,
+    template: (data: any) => formatDate(data.time),
+  },
+  {
+    field: 'action',
+    header: 'Action',
+    class: 'text-sm text-black capitalize',
+    style: '',
+    sortable: false,
+    template: (data: any) => data.action,
+  },
+])
 
 const rowClass = () => {
   return 'cursor-pointer'
@@ -101,12 +118,7 @@ onMounted(() => {
 </script>
 <template>
   <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
-    <section class="flex flex-col gap-1 w-full py-4">
-      <h1 class="text-3xl font-bold text-start text-white">{{ stocksTableTexts.title }}</h1>
-      <p class="text-start text-slate-200">
-        {{ stocksTableTexts.description }}
-      </p>
-    </section>
+    <ViewHeader :title="stocksTableTexts.title" :description="stocksTableTexts.description" />
     <section>
       <div class="flex justify-start mb-4">
         <IconField>
@@ -139,48 +151,18 @@ onMounted(() => {
         :rowClass="rowClass"
       >
         <Column
-          field="ticker"
-          header="Ticker"
-          class="text-sm font-bold text-black"
-          style="width: 5%"
-          sortable
+          v-for="col in tableColumns"
+          :key="col.field"
+          :field="col.field"
+          :header="col.header"
+          :class="col.class"
+          :style="col.style"
+          :sortable="col.sortable"
         >
           <template #body="{ data }">
-            {{ data.ticker }}
+            <span>{{ col.template(data) }}</span>
           </template>
         </Column>
-        <Column
-          field="company"
-          header="Company"
-          class="text-sm text-black"
-          style="width: 20%"
-          sortable
-        >
-          <template #body="{ data }">
-            {{ data.company }}
-          </template>
-          ></Column
-        >
-        <Column
-          field="brokerage"
-          header="Analyst"
-          class="text-sm text-black"
-          style="width: 15%"
-          sortable
-        >
-          <template #body="{ data }">
-            {{ data.brokerage }}
-          </template>
-          ></Column
-        >
-        <Column field="action" header="Action" class="text-sm text-black capitalize">
-          <template #body="{ data }">
-            <span class="">
-              {{ data.action }}
-            </span>
-          </template>
-          ></Column
-        >
         <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
           <template #body="{ data }">
             <div class="flex flex-row gap-2 items-center">
@@ -204,13 +186,7 @@ onMounted(() => {
             <div class="flex flex-row gap-2 items-center">
               <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
               <i
-                :class="[
-                  data.target_from < data.target_to
-                    ? 'pi pi-arrow-up text-green-500'
-                    : data.target_from > data.target_to
-                      ? 'pi pi-arrow-down text-red-500'
-                      : 'pi pi-arrow-right text-gray-500',
-                ]"
+                :class="getTargetArrow(data.target_from, data.target_to)"
                 style="font-size: 0.75rem"
               ></i>
               <Tag
@@ -220,17 +196,6 @@ onMounted(() => {
               >
             </div></template
           >
-        </Column>
-        <Column field="time" header="Date" class="text-sm text-black" style="width: 10%" sortable>
-          <template #body="{ data }">
-            {{
-              new Date(data.time).toLocaleDateString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-              })
-            }}
-          </template>
         </Column>
       </DataTable>
     </section>
