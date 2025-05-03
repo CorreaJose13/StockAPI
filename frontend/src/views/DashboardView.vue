@@ -34,6 +34,7 @@ const metricsCards = computed(() => {
       value: totalStocks.value,
       color: 'text-black',
       description: '',
+      single: true,
     },
     {
       title: 'Upgrades',
@@ -139,6 +140,7 @@ onMounted(async () => {
         :value="item.value"
         :color="item.color"
         :description="item.description"
+        :single="item.single"
       />
     </section>
     <DashboardSection
