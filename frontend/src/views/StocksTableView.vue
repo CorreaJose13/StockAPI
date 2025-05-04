@@ -15,6 +15,14 @@ const field = ref('')
 const order = ref(0)
 const searchQuery = ref('')
 
+const selectedStock = ref<Stock | null>(null)
+const showModal = ref(false)
+
+const onRowSelect = (event: any) => {
+  selectedStock.value = event.data
+  showModal.value = true
+}
+
 const onPage = (event: any) => {
   currentPage.value = event.page + 1
   limit.value = event.rows
@@ -32,13 +40,19 @@ const debouncedSearch = useDebounceFn((query: string) => {
   loadStocks(currentPage.value, limit.value, field.value, order.value, query)
 }, 300)
 
+const modalStyle = ref({
+  root: {
+    background: '{slate.200}',
+  },
+})
+
 watch(searchQuery, (newValue) => {
   debouncedSearch(newValue)
 })
 
 const stocksTableTexts = computed(() => {
   return {
-    title: 'Stock ratings overview',
+    title: 'Stock Ratings Overview',
     description:
       'Quickly view stock tickers, companies, brokerage actions, ratings, and target prices.',
     placeholder: 'Search by ticker, company, or brokerage',
@@ -52,7 +66,7 @@ const tableColumns = computed(() => [
     class: 'text-sm font-bold text-black',
     style: 'width: 5%',
     sortable: true,
-    template: (data: any) => data.ticker,
+    template: (data: Stock) => data.ticker,
   },
   {
     field: 'company',
@@ -60,7 +74,7 @@ const tableColumns = computed(() => [
     class: 'text-sm text-black',
     style: 'width: 20%',
     sortable: true,
-    template: (data: any) => data.company,
+    template: (data: Stock) => data.company,
   },
   {
     field: 'brokerage',
@@ -68,7 +82,7 @@ const tableColumns = computed(() => [
     class: 'text-sm text-black',
     style: 'width: 15%',
     sortable: true,
-    template: (data: any) => data.brokerage,
+    template: (data: Stock) => data.brokerage,
   },
   {
     field: 'time',
@@ -76,7 +90,7 @@ const tableColumns = computed(() => [
     class: 'text-sm text-black',
     style: 'width: 10%',
     sortable: true,
-    template: (data: any) => formatDate(data.time),
+    template: (data: Stock) => formatDate(data.time),
   },
   {
     field: 'action',
@@ -84,7 +98,7 @@ const tableColumns = computed(() => [
     class: 'text-sm text-black capitalize',
     style: '',
     sortable: false,
-    template: (data: any) => data.action,
+    template: (data: Stock) => data.action,
   },
 ])
 
@@ -99,7 +113,7 @@ const loadStocks = async (
   order?: number,
   query?: string,
 ) => {
-  let orderString = order === -1 ? 'desc' : 'asc'
+  const orderString = order === -1 ? 'desc' : 'asc'
   loading.value = true
   try {
     const result = await getStocksList(page, limit, field, orderString, query)
@@ -149,6 +163,7 @@ onMounted(() => {
         @sort="onSort"
         :rowHover="true"
         :rowClass="rowClass"
+        @row-click="onRowSelect"
       >
         <Column
           v-for="col in tableColumns"
@@ -198,6 +213,27 @@ onMounted(() => {
           >
         </Column>
       </DataTable>
+      <Dialog
+        v-model:visible="showModal"
+        modal
+        header="Stock details"
+        class="min-w-xl"
+        :dt="modalStyle"
+        :dismissableMask="true"
+      >
+        <StockModal
+          v-if="selectedStock"
+          :ticker="selectedStock.ticker"
+          :action="selectedStock.action"
+          :company="selectedStock.company"
+          :targetFrom="selectedStock.target_from"
+          :targetTo="selectedStock.target_to"
+          :ratingFrom="selectedStock.rating_from"
+          :ratingTo="selectedStock.rating_to"
+          :brokerage="selectedStock.brokerage"
+          :time="selectedStock.time"
+        />
+      </Dialog>
     </section>
   </div>
 </template>
