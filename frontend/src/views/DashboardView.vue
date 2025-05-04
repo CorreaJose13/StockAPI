@@ -3,6 +3,7 @@ import { onMounted, computed, ref } from 'vue'
 import { getStocksMetrics, getStocksList, getStocksAnalysis } from '@/composables/stocks'
 import InfoCard from '@/components/InfoCard.vue'
 import DashboardSection from '@/components/DashboardSection.vue'
+import StockCarousel from '@/components/StockCarousel.vue'
 import ViewHeader from '@/components/ViewHeader.vue'
 import type { Stock, StockWithScore } from '@/types/types'
 
@@ -17,13 +18,6 @@ const dashboardTexts = computed(() => {
   return {
     title: 'Stock Ratings',
     description: 'Welcome to StockWise! Where you can find stock data at your fingertips',
-  }
-})
-
-const sectionsTitle = computed(() => {
-  return {
-    insights: 'Best stocks to buy now',
-    stocks: 'Latest analyst ratings',
   }
 })
 
@@ -53,23 +47,6 @@ const metricsCards = computed(() => {
       value: remain.value,
       color: 'text-slate-500',
       description: metricsPercentage.value.remain,
-    },
-  ]
-})
-
-const dashboardSections = computed(() => {
-  return [
-    {
-      icon: 'pi pi-star',
-      title: sectionsTitle.value.insights,
-      link: '/stock-insights',
-      stocks: stocksScore.value,
-    },
-    {
-      icon: 'pi pi-eye',
-      title: sectionsTitle.value.stocks,
-      link: '/all-stocks',
-      stocks: stocks.value,
     },
   ]
 })
@@ -143,13 +120,17 @@ onMounted(async () => {
         :single="item.single"
       />
     </section>
+    <StockCarousel
+      icon="pi pi-star"
+      title="Top rated stocks"
+      link="/stock-insights"
+      :stocks="stocksScore"
+    />
     <DashboardSection
-      v-for="(section, index) in dashboardSections"
-      :key="index"
-      :icon="section.icon"
-      :title="section.title"
-      :link="section.link"
-      :stocks="section.stocks"
+      icon="pi pi-eye"
+      title="Latest analyst ratings"
+      link="/all-stocks"
+      :stocks="stocks"
     />
   </div>
 </template>
