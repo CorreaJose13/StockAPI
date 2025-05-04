@@ -21,7 +21,7 @@ const props = defineProps({
   },
 })
 const limitedStocks = computed(() => {
-  return props.stocks.slice(0, 4)
+  return props.stocks.slice(0, 5)
 })
 </script>
 <template>

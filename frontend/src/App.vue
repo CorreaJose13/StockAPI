@@ -38,7 +38,7 @@ const navItems = computed(() => {
       </div>
     </header>
 
-    <main class="flex-grow bg-gradient-to-r from-blue-900 via-blue-700 to-blue-800">
+    <main class="flex-grow bg-gradient-to-r from-blue-900 via-blue-700 to-blue-800 pb-20">
       <RouterView />
     </main>
   </div>

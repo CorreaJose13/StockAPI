@@ -8,9 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    Button: typeof import('primevue/button')['default']
-    Carousel: typeof import('primevue/carousel')['default']
-    Chart: typeof import('primevue/chart')['default']
     Column: typeof import('primevue/column')['default']
     DashboardSection: typeof import('./src/components/DashboardSection.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
@@ -23,6 +20,8 @@ declare module 'vue' {
     RouterView: typeof import('vue-router')['RouterView']
     SearchIcon: typeof import('./src/components/icons/SearchIcon.vue')['default']
     StockCard: typeof import('./src/components/StockCard.vue')['default']
+    StockCarousel: typeof import('./src/components/StockCarousel.vue')['default']
+    StockModal: typeof import('./src/components/StockModal.vue')['default']
     Tag: typeof import('primevue/tag')['default']
     ViewHeader: typeof import('./src/components/ViewHeader.vue')['default']
   }

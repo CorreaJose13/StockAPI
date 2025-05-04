@@ -40,7 +40,7 @@ const (
 	defaultPage  = 1
 	defaultLimit = 10
 	defaultField = "time"
-	defaultOrder = "ASC"
+	defaultOrder = "DESC"
 	maxLimit     = 100
 )
 
