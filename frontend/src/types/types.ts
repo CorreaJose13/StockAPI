@@ -11,6 +11,7 @@ export interface Stock {
 }
 
 export interface StockWithScore extends Stock {
+  index: number
   score: number
 }
 
