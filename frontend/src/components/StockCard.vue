@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 import { priceAbsDiff, formatDate } from '@/utils/stock'
 import { ref } from 'vue'
+import StockModal from './StockModal.vue'
 
 const visible = ref(false)
 
@@ -15,6 +16,12 @@ const props = defineProps({
   ratingTo: { type: String, required: true },
   brokerage: { type: String, required: true },
   time: { type: String, required: true },
+})
+
+const modalStyle = ref({
+  root: {
+    background: '{slate.200}',
+  },
 })
 
 const getHeaderTag = computed(() => {
@@ -53,7 +60,7 @@ const cardSections = computed(() => [
 </script>
 <template>
   <div
-    class="bg-white rounded-lg shadow-md p-4 min-w-3xs w-full max-w-sm flex flex-col gap-1"
+    class="bg-white rounded-lg shadow-md p-4 min-w-3xs flex flex-col gap-1"
     @click="visible = true"
   >
     <div class="flex items-center gap-2">
@@ -79,5 +86,17 @@ const cardSections = computed(() => [
 
     <div class="text-xs text-gray-500">{{ props.brokerage }} • {{ formatDate(props.time) }}</div>
   </div>
-  <Dialog v-model:visible="visible" modal class="min-w-xl"> </Dialog>
+  <Dialog v-model:visible="visible" modal header="Stock details" class="min-w-xl" :dt="modalStyle">
+    <StockModal
+      :ticker="props.ticker"
+      :action="props.action"
+      :company="props.company"
+      :targetFrom="props.targetFrom"
+      :targetTo="props.targetTo"
+      :ratingFrom="props.ratingFrom"
+      :ratingTo="props.ratingTo"
+      :brokerage="props.brokerage"
+      :time="props.time"
+    ></StockModal>
+  </Dialog>
 </template>
