@@ -1,100 +1,192 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useStockData, getStocksByCategory, getStockCategories } from '@/composables/stocks'
-import Carousel from 'primevue/carousel'
-import StockCard from '@/components/StockCard.vue'
+import { ref, computed, onMounted } from 'vue'
+import { getStocksAnalysis } from '@/composables/stocks'
+import type { StockWithScore, Stock } from '@/types/types'
+import { getRatingSeverity, getTargetArrow, getTargetSeverity } from '@/utils/stock'
 
-const stocks = useStockData()
-const categories = getStockCategories()
+const stocksScore = ref<StockWithScore[]>([])
+const loading = ref(false)
+const selectedStock = ref<Stock | null>(null)
+const showModal = ref(false)
 
-const activeTab = ref(categories[0])
+const currentPage = ref(1)
+const limit = ref(10)
 
-const tabs = ref(
-  categories.map((category) => ({
-    title: category,
-    value: category,
-  })),
-)
-
-const filteredStocks = (category: string) => {
-  return getStocksByCategory(category)
+const onRowSelect = (event: any) => {
+  selectedStock.value = event.data
+  showModal.value = true
 }
+
+const modalStyle = ref({
+  root: {
+    background: '{slate.200}',
+  },
+})
+
+const indexedStocksScore = computed(() => {
+  return stocksScore.value.map((stock, idx) => ({
+    ...stock,
+    index: `#${idx + 1}`,
+  }))
+})
 
 const insightTexts = computed(() => {
   return {
     title: 'Market Insights',
     description: 'Explore market trends and expert analysis in the stock market.',
-    insightsTitle: 'Trending Stocks',
+    insightsTitle: 'Suggested Stocks',
     sectorsTitle: 'Sector Highlights',
   }
 })
+
+const loadAnalysis = async () => {
+  try {
+    const result = await getStocksAnalysis()
+    stocksScore.value = result.stocks
+  } catch (error) {
+    console.error('Error fetching stocks:', error)
+  }
+}
+
+onMounted(async () => {
+  await loadAnalysis()
+})
+
+const tableColumns = computed(() => [
+  {
+    field: 'ranking',
+    header: 'Rank',
+    class: 'text-sm font-bold text-black',
+    style: 'width: 5%',
+    sortable: false,
+    template: (data: StockWithScore) => data.index,
+  },
+  {
+    field: 'ticker',
+    header: 'Ticker',
+    class: 'text-sm font-bold text-black',
+    style: 'width: 5%',
+    sortable: false,
+    template: (data: StockWithScore) => data.ticker,
+  },
+  {
+    field: 'company',
+    header: 'Company',
+    class: 'text-sm text-black',
+    style: 'width: 20%',
+    sortable: false,
+    template: (data: StockWithScore) => data.company,
+  },
+  {
+    field: 'brokerage',
+    header: 'Analyst',
+    class: 'text-sm text-black',
+    style: 'width: 15%',
+    sortable: false,
+    template: (data: StockWithScore) => data.brokerage,
+  },
+  {
+    field: 'action',
+    header: 'Action',
+    class: 'text-sm text-black capitalize',
+    style: '',
+    sortable: false,
+    template: (data: StockWithScore) => data.action,
+  },
+])
+
+const rowClass = () => {
+  return 'cursor-pointer'
+}
 </script>
 <template>
   <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
-    <section class="flex flex-col gap-1 w-full py-4">
-      <h1 class="text-3xl font-bold text-start text-black">{{ insightTexts.title }}</h1>
-      <p class="text-start text-gray-600">
-        {{ insightTexts.description }}
-      </p>
-    </section>
+    <ViewHeader :title="insightTexts.title" :description="insightTexts.description" />
     <section class="flex flex-col gap-2 w-full py-4 mt-4">
-      <h2 class="text-xl font-bold text-start text-black">{{ insightTexts.insightsTitle }}</h2>
-      <Carousel :value="stocks" :numVisible="3" :numScroll="3" circular :autoplayInterval="5000">
-        <template #item="slotProps">
-          <section class="flex flex-col w-full md:flex-row justify-between p-4">
-            <StockCard
-              :ticker="slotProps.data.ticker"
-              :action="slotProps.data.action"
-              :company="slotProps.data.company"
-              :targetFrom="slotProps.data.targetFrom"
-              :targetTo="slotProps.data.targetTo"
-              :ratingFrom="slotProps.data.ratingFrom"
-              :ratingTo="slotProps.data.ratingTo"
-              :brokerage="slotProps.data.brokerage"
-              :time="slotProps.data.time"
-            />
-          </section>
+      <div class="flex flex-row gap-2 items-center">
+        <i class="pi pi-briefcase text-white"></i>
+        <h2 class="text-xl font-bold text-start text-white">{{ insightTexts.insightsTitle }}</h2>
+      </div>
+    </section>
+    <DataTable
+      :value="indexedStocksScore"
+      :loading="loading"
+      paginator
+      :first="(currentPage - 1) * limit"
+      :rows="limit"
+      :rowsPerPageOptions="[10, 20]"
+      scrollable
+      scrollHeight="40rem"
+      :rowHover="true"
+      :rowClass="rowClass"
+      @row-click="onRowSelect"
+    >
+      <Column
+        v-for="col in tableColumns"
+        :key="col.field"
+        :field="col.field"
+        :header="col.header"
+        :class="col.class"
+        :style="col.style"
+        :sortable="col.sortable"
+      >
+        <template #body="{ data }">
+          <span class="capitalize">{{ col.template(data) }}</span>
         </template>
-      </Carousel>
-    </section>
-    <section class="flex flex-col gap-2 w-full py-4 mt-4">
-      <h2 class="text-xl font-bold text-start text-black">{{ insightTexts.sectorsTitle }}</h2>
-      <div class="flex flex-row justify-center gap-4">
-        <button
-          v-for="tab in tabs"
-          :key="tab.value"
-          class="text-gray-500 rounded-lg px-4 py-2 text-md font-medium"
-          :class="
-            activeTab === tab.value ? 'bg-blue-500 text-white' : 'text-gray-500 hover:text-gray-700'
-          "
-          @click="activeTab = tab.value"
+      </Column>
+      <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
+        <template #body="{ data }">
+          <div class="flex flex-row gap-2 items-center">
+            <Tag
+              class="capitalize text-sm"
+              :value="data.rating_from"
+              :severity="getRatingSeverity(data.rating_from)"
+            />
+            <i class="pi pi-arrow-right text-gray-500" style="font-size: 0.75rem"></i>
+            <Tag
+              class="capitalize text-sm"
+              :value="data.rating_to"
+              :severity="getRatingSeverity(data.rating_to)"
+            />
+          </div>
+        </template>
+        ></Column
+      >
+      <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
+        <template #body="{ data }">
+          <div class="flex flex-row gap-2 items-center">
+            <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
+            <i
+              :class="getTargetArrow(data.target_from, data.target_to)"
+              style="font-size: 0.75rem"
+            ></i>
+            <Tag class="capitalize" :severity="getTargetSeverity(data.target_from, data.target_to)"
+              >$ {{ data.target_to }}</Tag
+            >
+          </div></template
         >
-          {{ tab.title }}
-        </button>
-      </div>
-      <div class="flex flex-grow justify-between mt-2">
-        <StockCard
-          v-for="stock in filteredStocks(activeTab)"
-          :key="stock.id"
-          :ticker="stock.ticker"
-          :action="stock.action"
-          :company="stock.company"
-          :targetFrom="stock.targetFrom"
-          :targetTo="stock.targetTo"
-          :ratingFrom="stock.ratingFrom"
-          :ratingTo="stock.ratingTo"
-          :brokerage="stock.brokerage"
-          :time="stock.time"
-        />
-      </div>
-    </section>
+      </Column>
+    </DataTable>
+    <Dialog
+      v-model:visible="showModal"
+      modal
+      header="Stock details"
+      class="min-w-xl"
+      :dt="modalStyle"
+      :dismissableMask="true"
+    >
+      <StockModal
+        v-if="selectedStock"
+        :ticker="selectedStock.ticker"
+        :action="selectedStock.action"
+        :company="selectedStock.company"
+        :targetFrom="selectedStock.target_from"
+        :targetTo="selectedStock.target_to"
+        :ratingFrom="selectedStock.rating_from"
+        :ratingTo="selectedStock.rating_to"
+        :brokerage="selectedStock.brokerage"
+        :time="selectedStock.time"
+      />
+    </Dialog>
   </div>
 </template>
-<style scoped>
-:deep(.p-carousel-indicator-button) {
-  background: gray;
-}
-:deep(.p-carousel-indicator-active .p-carousel-indicator-button) {
-  background: black;
-}
-</style>
