@@ -4,7 +4,7 @@ locals {
 
 resource "terraform_data" "this" {
   triggers_replace = {
-    lambda_source_path = filebase64sha256(var.lambda_source_path)
+    always_run = "${timestamp()}"
   }
   provisioner "local-exec" {
     working_dir = dirname(var.lambda_source_path)
