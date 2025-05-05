@@ -8,7 +8,7 @@
 - [Features](#features)
 - [Installation steps](#installation-steps)
 - [Built with](#built-with)
-- [Project structure](#project-structure)
+- [Project structure](#summarized-project-structure)
 - [Useful resources](#useful-resources)
 - [License](#license)
 - [Author](#author)
@@ -49,7 +49,7 @@ Main technologies used in this project:
 | **Terraform**    | `v1.11.4`   | Infrastructure as Code (IaC) tool for cloud resource management.       |
 | **CockroachDB**  | `v25.1.6`   | Distributed SQL database for scalable and resilient data storage.      |
 
-## Project structure
+## Summarized project structure
 
 ```bash
 StockWise/
