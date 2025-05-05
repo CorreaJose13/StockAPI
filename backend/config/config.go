@@ -11,7 +11,6 @@ type Config struct {
 	APIURL      string
 	BearerToken string
 	DBURL       string
-	APIKey      string
 }
 
 func LoadConfig() (*Config, error) {
@@ -24,7 +23,6 @@ func LoadConfig() (*Config, error) {
 		APIURL:      os.Getenv("API_URL"),
 		BearerToken: os.Getenv("BEARER_TOKEN"),
 		DBURL:       os.Getenv("DB_URL"),
-		APIKey:      os.Getenv("API_KEY"),
 	}
 
 	return config, nil
