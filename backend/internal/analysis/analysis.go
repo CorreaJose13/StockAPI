@@ -25,6 +25,7 @@ var (
 )
 
 const (
+	limitAnalysis    = 20
 	percChangeWeight = 25.0 / 100
 	absChangeWeight  = 15.0 / 100
 	timeWeight       = 15.0 / 100
@@ -77,7 +78,7 @@ func (a *Analysis) Analyze() []*StockAnalysis {
 		return stocksAnalysis[i].Score > stocksAnalysis[j].Score
 	})
 
-	resultLimit := min(len(stocksAnalysis), 10)
+	resultLimit := min(len(stocksAnalysis), limitAnalysis)
 
 	return stocksAnalysis[:resultLimit]
 }
@@ -113,6 +114,9 @@ func (a *Analysis) computeStockMetrics() *StockMetrics {
 	absChange := absoluteChange(stock.TargetFrom, stock.TargetTo)
 	timeValue := stock.Time.Unix()
 
+	normalizedBrokerage := strings.TrimSpace(strings.ToLower(stock.Brokerage))
+	frequency[normalizedBrokerage]++
+
 	minPerc, maxPerc := percChange, percChange
 	minAbs, maxAbs := absChange, absChange
 	minTime, maxTime := timeValue, timeValue
@@ -123,7 +127,7 @@ func (a *Analysis) computeStockMetrics() *StockMetrics {
 		absChange = absoluteChange(stock.TargetFrom, stock.TargetTo)
 		timeValue = stock.Time.Unix()
 
-		normalizedBrokerage := strings.TrimSpace(strings.ToLower(stock.Brokerage))
+		normalizedBrokerage = strings.TrimSpace(strings.ToLower(stock.Brokerage))
 		frequency[normalizedBrokerage]++
 
 		minPerc, maxPerc = setMinMax(percChange, minPerc, maxPerc)
@@ -132,6 +136,7 @@ func (a *Analysis) computeStockMetrics() *StockMetrics {
 		minTime = int64(minTimeF)
 		maxTime = int64(maxTimeF)
 	}
+
 	return &StockMetrics{
 		brokerageMap:  frequency,
 		maxPercChange: maxPerc,
@@ -161,6 +166,9 @@ func setMinMax(value, min, max float64) (float64, float64) {
 }
 
 func percentageChange(targetFrom, targetTo float64) float64 {
+	if targetFrom == 0 {
+		return targetTo
+	}
 	targetDiff := targetTo - targetFrom
 	return (targetDiff / targetFrom) * 100
 }
@@ -211,7 +219,7 @@ func mapRatingToFloat(rating string) float64 {
 		return 0
 
 	default:
-		return 0
+		return 0.5
 	}
 }
 
@@ -245,6 +253,6 @@ func mapActionToFloat(action string) float64 {
 		return 0
 
 	default:
-		return 0
+		return 0.5
 	}
 }
