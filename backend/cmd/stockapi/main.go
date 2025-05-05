@@ -12,6 +12,7 @@ import (
 	"github.com/CorreaJose13/StockAPI/utils"
 )
 
+// local function to fetch and store stocks retrieved from the API
 func main() {
 	ctx := context.Background()
 
