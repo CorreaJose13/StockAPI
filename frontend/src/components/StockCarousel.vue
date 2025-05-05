@@ -69,7 +69,7 @@ const props = defineProps({
   background: black;
 }
 :deep(.p-carousel-next-button) {
-  background: white;
+  background: white !important;
 }
 :deep(.p-carousel-prev-button) {
   background: white !important;
