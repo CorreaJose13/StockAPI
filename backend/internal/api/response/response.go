@@ -11,7 +11,7 @@ import (
 var (
 	responseHeaders = map[string]string{
 		"Content-Type":                     "application/json",
-		"Access-Control-Allow-Origin":      "*", // Cambiar en prod
+		"Access-Control-Allow-Origin":      "https://stock-wise-khaki.vercel.app/",
 		"Access-Control-Allow-Credentials": "true",
 		"Access-Control-Allow-Headers":     "Content-Type",
 		"Access-Control-Allow-Methods":     "OPTIONS,POST,GET",
