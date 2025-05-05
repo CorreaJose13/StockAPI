@@ -58,7 +58,6 @@ func (ac *apiConsumer) doRequest(url string) (*models.Response, error) {
 		return nil, fmt.Errorf("error creating request: %w", err)
 	}
 
-	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", ac.authToken)
 
 	resp, err := ac.client.Do(req)
@@ -78,6 +77,7 @@ func (ac *apiConsumer) doRequest(url string) (*models.Response, error) {
 	}
 
 	var response models.Response
+
 	if err := json.Unmarshal(body, &response); err != nil {
 		return nil, fmt.Errorf("error unmarshalling JSON: %w", err)
 	}
