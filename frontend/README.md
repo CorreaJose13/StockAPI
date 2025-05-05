@@ -1,41 +1,42 @@
-# frontend
+# StockWise Frontend Installation Guide
 
-This template should help get you started developing with Vue 3 in Vite.
+### Prerequisites
 
-## Recommended IDE Setup
+- Node.js 18.19.1 or higher
+- npm 9.2.0 or higher
+- AWS API Gateway invoke url
 
-[VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur).
+## Enviroment Setup
 
-## Type Support for `.vue` Imports in TS
+1. Clone the repository:
 
-TypeScript cannot handle type information for `.vue` imports by default, so we replace the `tsc` CLI with `vue-tsc` for type checking. In editors, we need [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) to make the TypeScript language service aware of `.vue` types.
+```sh
+git clone https://github.com/CorreaJose13/StockWise.git
+cd StockWise/frontend
+```
 
-## Customize configuration
-
-See [Vite Configuration Reference](https://vite.dev/config/).
-
-## Project Setup
+2. Install dependencies:
 
 ```sh
 npm install
 ```
 
-### Compile and Hot-Reload for Development
+2. Create a `.env` file in the root directory with the following variables:
+
+```sh
+VITE_API_BASE_URL=apigateway-base-url(example:https://apigateway-id.region.amazonaws.com/stage)
+```
+
+3. Compile and Hot-Reload for Development
 
 ```sh
 npm run dev
 ```
 
-### Type-Check, Compile and Minify for Production
+4. Type-Check, Compile and Minify for Production
 
 ```sh
 npm run build
-```
-
-### Run Unit Tests with [Vitest](https://vitest.dev/)
-
-```sh
-npm run test:unit
 ```
 
 ### Lint with [ESLint](https://eslint.org/)
