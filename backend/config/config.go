@@ -27,3 +27,21 @@ func LoadConfig() (*Config, error) {
 
 	return config, nil
 }
+
+func LoadLambdaConfig() *Config {
+	config := &Config{
+		APIURL:      os.Getenv("API_URL"),
+		BearerToken: os.Getenv("BEARER_TOKEN"),
+		DBURL:       os.Getenv("DB_URL"),
+	}
+
+	return config
+}
+
+func LoadDbConfig() *Config {
+	config := &Config{
+		DBURL: os.Getenv("DB_URL"),
+	}
+
+	return config
+}
