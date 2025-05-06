@@ -44,6 +44,10 @@ type StockAnalysis struct {
 	Score float64 `json:"score"`
 }
 
+type StockAnalysisResponse struct {
+	TopStocks []*StockAnalysis `json:"top_stocks"`
+}
+
 type StockMetrics struct {
 	brokerageMap  map[string]int
 	maxPercChange float64
@@ -60,7 +64,7 @@ func NewAnalysis(stocks []*models.FormattedStock) *Analysis {
 	}
 }
 
-func (a *Analysis) Analyze() []*StockAnalysis {
+func (a *Analysis) Analyze() *StockAnalysisResponse {
 
 	metrics := a.computeStockMetrics()
 
@@ -80,7 +84,9 @@ func (a *Analysis) Analyze() []*StockAnalysis {
 
 	resultLimit := min(len(stocksAnalysis), limitAnalysis)
 
-	return stocksAnalysis[:resultLimit]
+	return &StockAnalysisResponse{
+		TopStocks: stocksAnalysis[:resultLimit],
+	}
 }
 
 func (a *Analysis) calculateScore(stock *models.FormattedStock, metrics *StockMetrics) float64 {

@@ -15,6 +15,10 @@ export interface StockWithScore extends Stock {
   score: number
 }
 
+export interface AnalysisResponse {
+  top_stocks: StockWithScore[]
+}
+
 export interface MetricsResponse {
   total_stocks: number
   positive_change: number
