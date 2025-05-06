@@ -39,9 +39,11 @@ func main() {
 		formattedStocks = append(formattedStocks, formattedStock)
 	}
 
-	if err := bulkInsert(ctx, formattedStocks); err != nil {
+	if err := repository.BulkInsertStocks(ctx, formattedStocks); err != nil {
 		log.Fatalf("failed to bulk insert stocks: %v", err)
 	}
+
+	log.Printf("successfully inserted %d stocks into the database", len(stocks))
 }
 
 func fetchStocks(cfg *config.Config) []models.Stock {
@@ -56,15 +58,4 @@ func fetchStocks(cfg *config.Config) []models.Stock {
 	log.Printf("successfully fetched %d stocks", len(stocks))
 
 	return stocks
-}
-
-func bulkInsert(ctx context.Context, stocks []*models.FormattedStock) error {
-
-	if err := repository.BulkInsertStocks(ctx, stocks); err != nil {
-		return err
-	}
-
-	log.Printf("successfully inserted %d stocks into the database", len(stocks))
-
-	return nil
 }
