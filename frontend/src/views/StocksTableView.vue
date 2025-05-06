@@ -1,13 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref, computed, watch } from 'vue'
-import { getStocksList } from '@/composables/stocks'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
 import { getRatingSeverity, getTargetSeverity, getTargetArrow, formatDate } from '@/utils/stock'
+import { useStocksStore } from '@/stores/stocks'
 
-const stocks = ref<Stock[]>([])
-const totalStocks = ref(0)
-const loading = ref(false)
+const stocksStore = useStocksStore()
 
 const currentPage = ref(1)
 const limit = ref(10)
@@ -26,19 +24,25 @@ const onRowSelect = (event: any) => {
 const onPage = (event: any) => {
   currentPage.value = event.page + 1
   limit.value = event.rows
-  loadStocks(currentPage.value, limit.value, field.value, order.value)
+  stocksStore.fetchData(currentPage.value, limit.value, field.value, formatOrder(order.value))
 }
 
 const onSort = (event: any) => {
   field.value = event.sortField
   order.value = event.sortOrder
-  loadStocks(currentPage.value, limit.value, field.value, order.value)
+  stocksStore.fetchData(currentPage.value, limit.value, field.value, formatOrder(order.value))
 }
 
 const debouncedSearch = useDebounceFn((query: string) => {
   currentPage.value = 1
-  loadStocks(currentPage.value, limit.value, field.value, order.value, query)
-}, 300)
+  stocksStore.fetchData(
+    currentPage.value,
+    limit.value,
+    field.value,
+    formatOrder(order.value),
+    query,
+  )
+}, 500)
 
 const modalStyle = ref({
   root: {
@@ -106,28 +110,12 @@ const rowClass = () => {
   return 'cursor-pointer'
 }
 
-const loadStocks = async (
-  page: number,
-  limit: number,
-  field?: string,
-  order?: number,
-  query?: string,
-) => {
-  const orderString = order === -1 ? 'desc' : 'asc'
-  loading.value = true
-  try {
-    const result = await getStocksList(page, limit, field, orderString, query)
-    stocks.value = result.stocks
-    totalStocks.value = result.length
-  } catch (error) {
-    console.error('Error fetching stocks:', error)
-  } finally {
-    loading.value = false
-  }
+const formatOrder = (order: number) => {
+  return order === -1 ? 'desc' : order === 1 ? 'asc' : ''
 }
 
-onMounted(() => {
-  loadStocks(currentPage.value, limit.value)
+onMounted(async () => {
+  await stocksStore.fetchInitialDataIfNeeded()
 })
 </script>
 <template>
@@ -147,9 +135,9 @@ onMounted(() => {
         </IconField>
       </div>
       <DataTable
-        :value="stocks"
-        :totalRecords="totalStocks"
-        :loading="loading"
+        :value="stocksStore.stocks"
+        :totalRecords="stocksStore.total"
+        :loading="stocksStore.loading"
         :lazy="true"
         paginator
         :first="(currentPage - 1) * limit"
