@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { getStocksAnalysis } from '@/composables/stocks'
-import type { StockWithScore, Stock } from '@/types/types'
+import type { Stock, StockWithScore } from '@/types/types'
 import { getRatingSeverity, getTargetArrow, getTargetSeverity } from '@/utils/stock'
+import { useAnalysisStore } from '@/stores/analysis'
 
-const stocksScore = ref<StockWithScore[]>([])
-const loading = ref(false)
+const analysisStore = useAnalysisStore()
+
 const selectedStock = ref<Stock | null>(null)
 const showModal = ref(false)
 
@@ -24,7 +24,7 @@ const modalStyle = ref({
 })
 
 const indexedStocksScore = computed(() => {
-  return stocksScore.value.map((stock, idx) => ({
+  return analysisStore.stocks.map((stock, idx) => ({
     ...stock,
     index: `#${idx + 1}`,
   }))
@@ -39,17 +39,8 @@ const insightTexts = computed(() => {
   }
 })
 
-const loadAnalysis = async () => {
-  try {
-    const result = await getStocksAnalysis()
-    stocksScore.value = result.stocks
-  } catch (error) {
-    console.error('Error fetching stocks:', error)
-  }
-}
-
 onMounted(async () => {
-  await loadAnalysis()
+  await analysisStore.fetchIfNeeded()
 })
 
 const tableColumns = computed(() => [
@@ -110,7 +101,7 @@ const rowClass = () => {
     </section>
     <DataTable
       :value="indexedStocksScore"
-      :loading="loading"
+      :loading="analysisStore.loading"
       paginator
       :first="(currentPage - 1) * limit"
       :rows="limit"
