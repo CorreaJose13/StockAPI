@@ -20,7 +20,7 @@ func DBSetup() (*db.CockRoachRepository, error) {
 		return nil, ErrMissingDBURL
 	}
 
-	repo, err := db.NewPostgresRepository(cfg)
+	repo, err := db.ConnectCockRoachDB(cfg)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func FullSetup() (*db.CockRoachRepository, *config.Config, error) {
 		return nil, nil, ErrMissingBearerToken
 	}
 
-	repo, err := db.NewPostgresRepository(cfg)
+	repo, err := db.ConnectCockRoachDB(cfg)
 	if err != nil {
 		return nil, nil, err
 	}
