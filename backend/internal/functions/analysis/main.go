@@ -19,7 +19,7 @@ var (
 )
 
 func init() {
-	repo, initErr = functions.Setup()
+	repo, initErr = functions.DBSetup()
 }
 
 func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.APIGatewayProxyResponse, error) {

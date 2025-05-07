@@ -8,6 +8,16 @@ variable "schedule_expression" {
   type        = string
 }
 
+variable "lambda_scheduler_role" {
+  description = "The name of the IAM role for the Lambda scheduler"
+  type        = string
+}
+
+variable "lambda_scheduler_policy" {
+  description = "The name of the IAM policy for the Lambda scheduler"
+  type        = string
+}
+
 #Lambda variables
 variable "function_name" {
   description = "The name of the Lambda function"

@@ -53,9 +53,9 @@ func formatTarget(target string) (float64, error) {
 func formatRating(rating string) string {
 	formattedRating := strings.TrimSpace(strings.ToLower(rating))
 	if len(formattedRating) == 0 {
-		return "neutral"
+		return "hold"
 	}
-	return formattedRating
+	return narrowRating(formattedRating)
 }
 
 func formatAction(action string) string {
@@ -73,4 +73,26 @@ func formatTime(timeStr string) (time.Time, error) {
 	}
 
 	return parsedTime, nil
+}
+
+func narrowRating(rating string) string {
+	switch rating {
+	case "buy", "strong-buy", "positive":
+		return "buy"
+
+	case "outperform", "sector outperform", "market outperform", "overweight", "outperformer", "speculative buy":
+		return "outperform"
+
+	case "hold", "neutral", "unchanged", "market perform", "equal weight", "in-line", "sector perform",
+		"sector weight", "peer perform":
+		return "hold"
+
+	case "underperform", "underweight", "sector underperform", "under perform", "reduce":
+		return "underperform"
+
+	case "sell", "negative":
+		return "sell"
+	default:
+		return rating
+	}
 }

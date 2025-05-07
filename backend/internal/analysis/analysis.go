@@ -208,20 +208,19 @@ func (a *Analysis) brokerageScore(brokerageFrequencyMap map[string]int, brokerag
 
 func mapRatingToFloat(rating string) float64 {
 	switch rating {
-	case "buy", "strong-buy", "speculative buy":
+	case "buy":
 		return 1
 
-	case "outperform", "sector outperform", "market outperform", "overweight", "outperformer", "positive":
+	case "outperform":
 		return 0.75
 
-	case "hold", "neutral", "unchanged", "market perform", "equal weight", "in-line", "sector perform",
-		"sector weight", "peer perform":
+	case "hold":
 		return 0.5
 
-	case "underperform", "underweight", "sector underperform", "under perform", "reduce":
+	case "underperform":
 		return 0.25
 
-	case "sell", "negative":
+	case "sell":
 		return 0
 
 	default:

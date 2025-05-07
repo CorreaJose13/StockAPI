@@ -32,6 +32,7 @@ use_lockfile=true
 DB_URL           = your-cockroachdb-connection-string
 api_gateway_name = your-api-gateway-name
 lambda_bucket    = your-bucket-name-to-store-lambda-functions
+stage            = your-stage
 ```
 
 4.  Configure remote state:

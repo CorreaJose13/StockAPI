@@ -1,5 +1,3 @@
-variable "stage" { default = "production" }
-
 module "metrics_endpoint" {
   source             = "../../modules/lambda_api_integration/"
   lambda_source_path = "${path.module}/../../../backend/internal/functions/metrics/main.go"
@@ -18,7 +16,6 @@ module "metrics_endpoint" {
   endpoint_path     = "metrics"
   http_method       = "GET"
   stage             = var.stage
-
 }
 
 module "analyze_endpoint" {
@@ -57,7 +54,6 @@ module "stocks_endpoint" {
   endpoint_path     = "stocks"
   http_method       = "GET"
   stage             = var.stage
-
 }
 
 // TO DO: Improve redeployment strategy
