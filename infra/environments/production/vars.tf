@@ -14,3 +14,20 @@ variable "DB_URL" {
   type        = string
   sensitive   = true
 }
+
+variable "API_URL" {
+  description = "External API URL"
+  type        = string
+  sensitive   = true
+}
+
+variable "BEARER_TOKEN" {
+  description = "Bearer token for external API"
+  type        = string
+  sensitive   = true
+}
+
+variable "stage" {
+  description = "Stage of the API Gateway"
+  type        = string
+}
