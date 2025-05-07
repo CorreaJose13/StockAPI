@@ -14,14 +14,14 @@ import (
 
 // local function to fetch and store stocks retrieved from the API
 func main() {
-	ctx := context.Background()
+	_ = context.Background()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		log.Fatalf("failed to load configuration: %v", err)
 	}
 
-	repo, err := db.NewPostgresRepository(cfg)
+	repo, err := db.ConnectCockRoachDB(cfg)
 	if err != nil {
 		log.Fatalf("failed to initialize database repository: %v", err)
 	}
@@ -30,20 +30,11 @@ func main() {
 
 	stocks := fetchStocks(cfg)
 
-	var formattedStocks []*models.FormattedStock
-	for _, stock := range stocks {
-		formattedStock, err := utils.Formatter(&stock)
-		if err != nil {
-			log.Fatalf("failed to format stock: %v", err)
-		}
-		formattedStocks = append(formattedStocks, formattedStock)
-	}
+	formattedStocks := formatStocks(stocks)
 
-	if err := repository.BulkInsertStocks(ctx, formattedStocks); err != nil {
-		log.Fatalf("failed to bulk insert stocks: %v", err)
+	if err := repository.BulkInsertStocks(context.Background(), formattedStocks); err != nil {
+		log.Fatalf("failed to insert stocks: %v", err)
 	}
-
-	log.Printf("successfully inserted %d stocks into the database", len(stocks))
 }
 
 func fetchStocks(cfg *config.Config) []models.Stock {
@@ -58,4 +49,16 @@ func fetchStocks(cfg *config.Config) []models.Stock {
 	log.Printf("successfully fetched %d stocks", len(stocks))
 
 	return stocks
+}
+
+func formatStocks(stocks []models.Stock) []*models.FormattedStock {
+	var formattedStocks []*models.FormattedStock
+	for _, stock := range stocks {
+		formattedStock, err := utils.Formatter(&stock)
+		if err != nil {
+			log.Fatalf("failed to format stock: %v", err)
+		}
+		formattedStocks = append(formattedStocks, formattedStock)
+	}
+	return formattedStocks
 }
