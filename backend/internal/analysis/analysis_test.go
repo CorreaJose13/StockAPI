@@ -231,7 +231,8 @@ func TestAnalyze(t *testing.T) {
 	}
 
 	analysis := NewAnalysis(stocks)
-	results := analysis.Analyze()
+	response := analysis.Analyze()
+	results := response.TopStocks
 
 	if len(results) == 0 {
 		t.Error("Expected non-empty results from Analyze(), got empty slice")
