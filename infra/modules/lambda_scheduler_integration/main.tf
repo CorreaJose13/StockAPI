@@ -38,6 +38,24 @@ module "lambda_function" {
   depends_on = [terraform_data.this]
 }
 
+module "lambda_scheduler_role" {
+  source = "../../modules/iam/iam_role/"
+
+  name     = var.lambda_scheduler_role
+  services = ["scheduler.amazonaws.com"]
+}
+
+module "lambda_logs_policy" {
+  source = "../../modules/iam/iam_policy_attachment/"
+
+  name        = var.lambda_scheduler_policy
+  description = "IAM policy for Scheduler to invoke Lambda function"
+  action      = ["lambda:InvokeFunction"]
+  resource    = module.lambda_function.arn
+  role_name   = module.lambda_scheduler_role.name
+}
+
+
 resource "aws_scheduler_schedule" "this" {
   name = var.scheduler_name
 
@@ -50,6 +68,14 @@ resource "aws_scheduler_schedule" "this" {
 
   target {
     arn      = "arn:aws:scheduler:::aws-sdk:lambda:invoke"
-    role_arn = module.lambda_function.arn
+    role_arn = module.lambda_scheduler_role.arn
+
+    input = jsonencode({
+      FunctionName   = module.lambda_function.name
+      InvocationType = "Event"
+      Payload = jsonencode({
+        message = "Hello from AWS Scheduler!"
+      })
+    })
   }
 }
