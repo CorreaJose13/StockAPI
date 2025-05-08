@@ -1,14 +1,10 @@
 <script setup lang="ts">
-import Carousel from 'primevue/carousel'
-import StockCard from '@/components/StockCard.vue'
-import { RouterLink } from 'vue-router'
 import type { StockWithScore } from '@/types/types'
+import StockCard from '@/components/StockCard.vue'
+import ViewAllCTA from '@/components/ViewAllCTA.vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
-  icon: {
-    type: String,
-    required: true,
-  },
   title: {
     type: String,
     required: true,
@@ -22,51 +18,70 @@ const props = defineProps({
     required: true,
   },
 })
+
+const responsiveOptions = ref([
+  {
+    breakpoint: '1280px',
+    numVisible: 3,
+    numScroll: 1,
+  },
+  {
+    breakpoint: '1024px',
+    numVisible: 3,
+    numScroll: 1,
+  },
+  {
+    breakpoint: '768px',
+    numVisible: 2,
+    numScroll: 1,
+  },
+  {
+    breakpoint: '640px',
+    numVisible: 1,
+    numScroll: 1,
+  },
+])
+
+const stocksSlice = computed(() => {
+  return props.stocks.slice(0, 10)
+})
 </script>
-
 <template>
-  <section class="flex flex-col gap-4 my-6">
-    <div class="flex justify-between items-center">
-      <div class="flex flex-row gap-2 items-center">
-        <i :class="['text-white', props.icon]"></i>
-        <h2 class="text-xl font-bold text-start text-white">{{ props.title }}</h2>
-      </div>
-      <RouterLink
-        :to="props.link"
-        class="p-2 text-sm rounded-lg text-white font-semibold hover:text-black hover:bg-white"
+  <section class="flex flex-col gap-4">
+    <ViewAllCTA :title="props.title" :link="props.link" />
+    <div class="card">
+      <Carousel
+        :value="stocksSlice"
+        :numVisible="3"
+        :numScroll="1"
+        :responsive-options="responsiveOptions"
       >
-        <span class="flex flex-row gap-2 items-center justify-center">
-          <span>See all</span>
-          <i class="pi pi-arrow-right"></i>
-        </span>
-      </RouterLink>
+        <template #item="slotProps">
+          <div class="h-full p-4">
+            <StockCard
+              :ticker="slotProps.data.ticker"
+              :action="slotProps.data.action"
+              :company="slotProps.data.company"
+              :targetFrom="Number(slotProps.data.target_from || 0)"
+              :targetTo="Number(slotProps.data.target_to || 0)"
+              :ratingFrom="slotProps.data.rating_from"
+              :ratingTo="slotProps.data.rating_to"
+              :brokerage="slotProps.data.brokerage"
+              :time="slotProps.data.time"
+            />
+          </div>
+        </template>
+      </Carousel>
     </div>
-
-    <Carousel :value="props.stocks" :numVisible="3" :numScroll="1" circular>
-      <template #item="slotProps">
-        <section class="flex flex-col w-full p-4">
-          <StockCard
-            :ticker="slotProps.data.ticker"
-            :action="slotProps.data.action"
-            :company="slotProps.data.company"
-            :targetFrom="Number(slotProps.data.target_from || 0)"
-            :targetTo="Number(slotProps.data.target_to || 0)"
-            :ratingFrom="slotProps.data.rating_from"
-            :ratingTo="slotProps.data.rating_to"
-            :brokerage="slotProps.data.brokerage"
-            :time="slotProps.data.time"
-          />
-        </section>
-      </template>
-    </Carousel>
   </section>
 </template>
 <style scoped>
 :deep(.p-carousel-indicator-button) {
-  background: white;
+  background: black;
+  border: 1px solid white;
 }
 :deep(.p-carousel-indicator-active .p-carousel-indicator-button) {
-  background: black;
+  background: white;
 }
 :deep(.p-carousel-next-button) {
   background: white !important;
