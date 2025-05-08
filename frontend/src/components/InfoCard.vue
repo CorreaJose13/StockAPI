@@ -23,14 +23,14 @@ const props = defineProps({
 })
 </script>
 <template>
-  <article class="flex flex-col w-40 p-4 bg-white rounded-lg shadow-md">
-    <span class="text-lg font-semibold text-gray-700">{{ props.title }}</span>
+  <article class="flex w-40 flex-col rounded-lg bg-white p-4">
+    <span class="text-lg font-semibold text-slate-800">{{ props.title }}</span>
     <div v-if="props.single">
       <span :class="['text-5xl font-bold', props.color]">{{ props.value }}</span>
     </div>
     <div v-else>
       <span :class="['text-3xl font-bold', props.color]">{{ props.value }}</span>
-      <p class="text-xs mt-2 text-gray-700">{{ props.description }}</p>
+      <p class="mt-2 text-xs text-gray-700">{{ props.description }}</p>
     </div>
   </article>
 </template>
