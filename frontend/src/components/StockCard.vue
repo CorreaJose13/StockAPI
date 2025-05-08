@@ -108,7 +108,7 @@ onMounted(() => {
 </script>
 <template>
   <div
-    class="flex h-full min-w-3xs cursor-pointer flex-col justify-between rounded-lg bg-white p-4 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105"
+    class="flex h-full min-w-3xs cursor-pointer flex-col justify-between rounded-lg bg-white p-4 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105 dark:bg-stone-900"
     @click="showModal = true"
   >
     <div class="flex flex-col gap-2">
@@ -119,19 +119,21 @@ onMounted(() => {
           class="size-8"
           @error="imageError = true"
         />
-        <span class="text-xl font-bold text-black"> {{ props.ticker }} </span>
+        <span class="text-xl font-bold text-black dark:text-white"> {{ props.ticker }} </span>
         <Tag :severity="getHeaderTag.severity" :dt="tagDt">
           {{ getHeaderTag.text }}
         </Tag>
       </div>
-      <span class="text-md mb-3 w-3/4 text-gray-700 capitalize">{{ props.company }}</span>
+      <span class="text-md mb-3 w-3/4 text-gray-700 capitalize dark:text-slate-200">{{
+        props.company
+      }}</span>
     </div>
 
     <div class="flex flex-col gap-2">
       <div class="flex flex-row items-center gap-2 text-lg">
-        <span class="font-semibold text-black">{{ priceSection.label }}</span>
+        <span class="font-semibold text-black dark:text-white">{{ priceSection.label }}</span>
         <div class="flex items-center gap-2">
-          <span class="text-slate-500 capitalize line-through">
+          <span class="text-slate-500 capitalize line-through dark:text-slate-300">
             {{ priceSection.fromValue }}
           </span>
           <i class="pi pi-arrow-right" style="font-size: 0.75rem"></i>
@@ -142,13 +144,15 @@ onMounted(() => {
       </div>
 
       <div class="flex flex-row items-center gap-2 text-lg">
-        <span class="font-semibold text-black">{{ ratingSection.label }}</span>
+        <span class="font-semibold text-black dark:text-white">{{ ratingSection.label }}</span>
         <Tag :severity="getRatingSeverity(props.ratingTo)" class="size-sm capitalize" :dt="tagDt">
           {{ props.ratingTo }}
         </Tag>
       </div>
 
-      <div class="text-sm text-gray-500">Last update: {{ formatDateShort(props.time) }}</div>
+      <div class="text-sm text-gray-500 dark:text-gray-300">
+        Last update: {{ formatDateShort(props.time) }}
+      </div>
     </div>
   </div>
   <Dialog
