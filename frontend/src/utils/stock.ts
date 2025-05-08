@@ -7,13 +7,13 @@ export const getRatingSeverity = (rating: string) => {
     case 'buy':
       return 'success'
     case 'outperform':
-      return 'info'
+      return 'success'
     case 'underperform':
       return 'warn'
     case 'hold':
-      return 'secondary'
+      return 'info'
     default:
-      return 'secondary'
+      return 'contrast'
   }
 }
 
@@ -80,10 +80,7 @@ export const modalDt = ref({
 })
 
 export const tagDt = ref({
-  root: {
-    fontSize: '1.125rem',
-    lineHeight: 'calc(1.75 / 1.125)',
-  },
+  root: { fontSize: '1rem' },
 })
 
 export const tableDt = ref({

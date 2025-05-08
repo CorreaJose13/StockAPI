@@ -4,8 +4,6 @@
 
 @theme {
   --animate-fade-in-y: fadeInY 1.5s ease-in;
-  --animate-fade-in-x: fadeInX 1.5s ease-in;
-  --animate-fade-in-x-reverse: -fadeInX 1.5s ease-in;
 
   @keyframes fadeInY {
     from {
@@ -16,30 +14,6 @@
     to {
       opacity: 1;
       transform: translateY(0);
-    }
-  }
-
-  @keyframes fadeInX {
-    from {
-      opacity: 0;
-      transform: translateX(-30px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
-    }
-  }
-
-  @keyframes -fadeInX {
-    from {
-      opacity: 0;
-      transform: translateX(30px);
-    }
-
-    to {
-      opacity: 1;
-      transform: translateX(0);
     }
   }
 }
