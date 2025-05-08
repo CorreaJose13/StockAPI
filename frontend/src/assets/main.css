@@ -1,3 +1,45 @@
-@import 'tailwindcss';
 @import 'tailwindcss-primeui';
 @import 'primeicons/primeicons.css';
+@import 'tailwindcss';
+
+@theme {
+  --animate-fade-in-y: fadeInY 1.5s ease-in;
+  --animate-fade-in-x: fadeInX 1.5s ease-in;
+  --animate-fade-in-x-reverse: -fadeInX 1.5s ease-in;
+
+  @keyframes fadeInY {
+    from {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInX {
+    from {
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes -fadeInX {
+    from {
+      opacity: 0;
+      transform: translateX(30px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+}
