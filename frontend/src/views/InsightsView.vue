@@ -91,12 +91,12 @@ const rowClass = () => {
 }
 </script>
 <template>
-  <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
+  <div class="mx-auto max-h-screen max-w-screen-2xl p-4">
     <ViewHeader :title="insightTexts.title" :description="insightTexts.description" />
-    <section class="flex flex-col gap-2 w-full py-4 mt-4">
-      <div class="flex flex-row gap-2 items-center">
+    <section class="mt-4 flex w-full flex-col gap-2 py-4">
+      <div class="flex flex-row items-center gap-2">
         <i class="pi pi-briefcase text-white"></i>
-        <h2 class="text-xl font-bold text-start text-white">{{ insightTexts.insightsTitle }}</h2>
+        <h2 class="text-start text-xl font-bold text-white">{{ insightTexts.insightsTitle }}</h2>
       </div>
     </section>
     <DataTable
@@ -127,15 +127,15 @@ const rowClass = () => {
       </Column>
       <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
         <template #body="{ data }">
-          <div class="flex flex-row gap-2 items-center">
+          <div class="flex flex-row items-center gap-2">
             <Tag
-              class="capitalize text-sm"
+              class="text-sm capitalize"
               :value="data.rating_from"
               :severity="getRatingSeverity(data.rating_from)"
             />
             <i class="pi pi-arrow-right text-gray-500" style="font-size: 0.75rem"></i>
             <Tag
-              class="capitalize text-sm"
+              class="text-sm capitalize"
               :value="data.rating_to"
               :severity="getRatingSeverity(data.rating_to)"
             />
@@ -145,7 +145,7 @@ const rowClass = () => {
       >
       <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
         <template #body="{ data }">
-          <div class="flex flex-row gap-2 items-center">
+          <div class="flex flex-row items-center gap-2">
             <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
             <i
               :class="getTargetArrow(data.target_from, data.target_to)"

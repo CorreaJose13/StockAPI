@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import type { ChartData, ChartOptions } from '@/types/chart'
-import { priceAbsDiff, pricePercDiff, formatDate } from '@/utils/stock'
+import { priceAbsDiff, pricePercDiff, formatDateLong } from '@/utils/stock'
 
 const props = defineProps({
   ticker: { type: String, required: true },
@@ -179,7 +179,7 @@ const getPerc = computed(() => {
         <span class="text-2xl text-black">{{ props.brokerage }}</span>
         <div class="flex items-center gap-2">
           <i class="pi pi-calendar text-black"></i>
-          <span class="text-black">{{ formatDate(props.time) }}</span>
+          <span class="text-black">{{ formatDateLong(props.time) }}</span>
         </div>
       </div>
     </div>
