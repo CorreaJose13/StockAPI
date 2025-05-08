@@ -7,7 +7,7 @@ import MainHeader from '@/components/MainHeader.vue'
     <header>
       <MainHeader />
     </header>
-    <main class="flex-grow bg-black px-6 pb-4">
+    <main class="h-full flex-grow bg-black px-6 pb-4">
       <RouterView />
     </main>
   </div>

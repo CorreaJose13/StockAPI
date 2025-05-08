@@ -2,16 +2,16 @@
 import {
   priceAbsDiff,
   formatDateShort,
-  modalStyle,
+  modalDt,
   getRatingSeverity,
   formatPrice,
-  tagStyle,
+  tagDt,
 } from '@/utils/stock'
 import StockModal from './StockModal.vue'
 import { BRAND_ID } from '@/config/config'
 import { computed, ref, onMounted } from 'vue'
 
-const visible = ref(false)
+const showModal = ref(false)
 const imageError = ref(false)
 
 const validImage = ref(false)
@@ -109,7 +109,7 @@ onMounted(() => {
 <template>
   <div
     class="flex h-full min-w-3xs cursor-pointer flex-col justify-between rounded-lg bg-white p-4 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105"
-    @click="visible = true"
+    @click="showModal = true"
   >
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2">
@@ -120,7 +120,7 @@ onMounted(() => {
           @error="imageError = true"
         />
         <span class="text-xl font-bold text-black"> {{ props.ticker }} </span>
-        <Tag :severity="getHeaderTag.severity" :dt="tagStyle">
+        <Tag :severity="getHeaderTag.severity" :dt="tagDt">
           {{ getHeaderTag.text }}
         </Tag>
       </div>
@@ -143,11 +143,7 @@ onMounted(() => {
 
       <div class="flex flex-row items-center gap-2 text-lg">
         <span class="font-semibold text-black">{{ ratingSection.label }}</span>
-        <Tag
-          :severity="getRatingSeverity(props.ratingTo)"
-          class="size-sm capitalize"
-          :dt="tagStyle"
-        >
+        <Tag :severity="getRatingSeverity(props.ratingTo)" class="size-sm capitalize" :dt="tagDt">
           {{ props.ratingTo }}
         </Tag>
       </div>
@@ -155,7 +151,13 @@ onMounted(() => {
       <div class="text-sm text-gray-500">Last update: {{ formatDateShort(props.time) }}</div>
     </div>
   </div>
-  <Dialog v-model:visible="visible" modal header="Stock details" class="" :dt="modalStyle">
+  <Dialog
+    v-model:visible="showModal"
+    modal
+    header="Stock details"
+    :dt="modalDt"
+    :dismissableMask="true"
+  >
     <StockModal
       :ticker="props.ticker"
       :action="props.action"
