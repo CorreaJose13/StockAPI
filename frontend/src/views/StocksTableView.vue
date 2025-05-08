@@ -107,7 +107,7 @@ onMounted(async () => {
 </script>
 <template>
   <div class="mx-auto max-w-screen-2xl">
-    <div class="flex flex-row items-end justify-between">
+    <div class="flex flex-row items-end justify-between py-4">
       <ViewHeader :title="stocksTableTexts.title" :description="stocksTableTexts.description" />
       <IconField class="py-4">
         <InputIcon>
@@ -128,6 +128,7 @@ onMounted(async () => {
         :rowsPerPageOptions="[10, 20, 50, 100]"
         @page="onPage"
         scrollable
+        scroll-height="40rem"
         :sortField="field"
         :sortOrder="order"
         @sort="onSort"
