@@ -1,6 +1,8 @@
+import type { AnalysisResponse, StockWithScore } from '@/types/types'
+import { CACHE_TIMEOUT } from '@/constants/constants'
 import { defineStore } from 'pinia'
 import { API_URL } from '@/config/config'
-import type { AnalysisResponse, StockWithScore } from '@/types/types'
+
 import axios from 'axios'
 
 export const useAnalysisStore = defineStore('analysis', {
@@ -17,8 +19,7 @@ export const useAnalysisStore = defineStore('analysis', {
     isStale: (state) => {
       if (!state.lastFetched) return true
 
-      const staleTimeInMs = 60 * 60 * 1000 // 1 hour
-      return Date.now() - state.lastFetched > staleTimeInMs
+      return Date.now() - state.lastFetched > CACHE_TIMEOUT
     },
   },
 

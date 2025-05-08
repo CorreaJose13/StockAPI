@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { RouterLink } from 'vue-router'
 import type { Stock } from '@/types/types'
+import ViewAllCTA from './ViewAllCTA.vue'
 import StockCard from './StockCard.vue'
+import { computed } from 'vue'
 const props = defineProps({
   title: {
     type: String,
@@ -25,23 +25,9 @@ const limitedStocks = computed(() => {
 })
 </script>
 <template>
-  <div>
-    <section class="flex flex-row justify-between w-full py-4">
-      <div class="flex flex-row gap-2 justify-center items-center">
-        <i :class="['text-white', props.icon]"></i>
-        <h2 class="text-xl font-bold text-start text-white">{{ props.title }}</h2>
-      </div>
-      <RouterLink
-        :to="props.link"
-        class="p-2 text-sm rounded-lg text-white font-semibold hover:text-black hover:bg-white"
-      >
-        <span class="flex flex-row gap-2 items-center justify-center">
-          <span>See all</span>
-          <i class="pi pi-arrow-right"></i>
-        </span>
-      </RouterLink>
-    </section>
-    <section class="flex flex-col w-full md:flex-row justify-between gap-4">
+  <div class="flex flex-col gap-4">
+    <ViewAllCTA :title="title" :link="link" />
+    <section class="grid w-full grid-cols-5 gap-4">
       <StockCard
         v-for="stock in limitedStocks"
         :key="stock.ticker"

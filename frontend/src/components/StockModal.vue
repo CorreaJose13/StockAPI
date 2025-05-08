@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue'
 import type { ChartData, ChartOptions } from '@/types/chart'
-import { priceAbsDiff, pricePercDiff, formatDate } from '@/utils/stock'
+import { priceAbsDiff, pricePercDiff, formatDateLong } from '@/utils/stock'
 
 const props = defineProps({
   ticker: { type: String, required: true },
@@ -131,22 +131,22 @@ const getPerc = computed(() => {
 </script>
 <template>
   <div class="flex flex-col">
-    <div class="flex gap-2 items-center mb-1">
-      <span class="font-bold text-2xl text-black"> {{ props.ticker }} </span>
-      <span class="bg-slate-500 text-white text-xs px-2 py-0.5 rounded-full">
+    <div class="mb-1 flex items-center gap-2">
+      <span class="text-2xl font-bold text-black"> {{ props.ticker }} </span>
+      <span class="rounded-full bg-slate-500 px-2 py-0.5 text-xs text-white">
         {{ props.action }}
       </span>
     </div>
-    <div class="text-gray-600 text-sm mb-3">{{ props.company }}</div>
+    <div class="mb-3 text-sm text-gray-600">{{ props.company }}</div>
   </div>
 
-  <div class="flex flex-grow gap-4 mt-2 mb-4">
-    <div class="bg-white rounded-lg shadow-md p-4 flex-1 outline">
+  <div class="mt-2 mb-4 flex flex-grow gap-4">
+    <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
       <div class="flex flex-col">
-        <span class="text-black font-semibold"> {{ modalTexts.price }}</span>
+        <span class="font-semibold text-black"> {{ modalTexts.price }}</span>
         <div class="flex flex-grow items-center gap-4">
-          <span class="flex-1 w-full font-bold text-black text-2xl">${{ props.targetTo }}</span>
-          <div class="flex flex-col flex-1 gap-2">
+          <span class="w-full flex-1 text-2xl font-bold text-black">${{ props.targetTo }}</span>
+          <div class="flex flex-1 flex-col gap-2">
             <span class="text-gray-500 line-through">${{ props.targetFrom }}</span>
             <div class="flex gap-2">
               <Tag :value="getPerc" :severity="getPercSeverity(props.targetFrom, props.targetTo)">
@@ -161,25 +161,25 @@ const getPerc = computed(() => {
       </div>
     </div>
 
-    <div class="bg-white rounded-lg shadow-md p-4 flex-1 outline">
+    <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
       <div class="flex flex-col">
-        <span class="text-black font-semibold"> {{ modalTexts.rating }}</span>
+        <span class="font-semibold text-black"> {{ modalTexts.rating }}</span>
         <section class="my-2 flex flex-col">
-          <span class="font-bold text-black text-2xl capitalize">{{ props.ratingTo }}</span>
-          <span class="text-gray-500 line-through capitalize">{{ props.ratingFrom }}</span>
+          <span class="text-2xl font-bold text-black capitalize">{{ props.ratingTo }}</span>
+          <span class="text-gray-500 capitalize line-through">{{ props.ratingFrom }}</span>
         </section>
       </div>
     </div>
   </div>
 
-  <div class="bg-white rounded-lg shadow-md p-4 flex-1 outline">
+  <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
     <div class="flex flex-col">
-      <span class="text-black font-semibold">{{ modalTexts.analysisBy }}</span>
+      <span class="font-semibold text-black">{{ modalTexts.analysisBy }}</span>
       <div class="my-2 flex flex-row justify-between">
-        <span class="text-black text-2xl">{{ props.brokerage }}</span>
+        <span class="text-2xl text-black">{{ props.brokerage }}</span>
         <div class="flex items-center gap-2">
           <i class="pi pi-calendar text-black"></i>
-          <span class="text-black">{{ formatDate(props.time) }}</span>
+          <span class="text-black">{{ formatDateLong(props.time) }}</span>
         </div>
       </div>
     </div>

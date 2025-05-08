@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 export const getRatingSeverity = (rating: string) => {
   switch (rating) {
     case 'sell':
@@ -5,13 +7,13 @@ export const getRatingSeverity = (rating: string) => {
     case 'buy':
       return 'success'
     case 'outperform':
-      return 'info'
+      return 'success'
     case 'underperform':
       return 'warn'
     case 'hold':
-      return 'secondary'
+      return 'info'
     default:
-      return 'secondary'
+      return 'contrast'
   }
 }
 
@@ -47,10 +49,46 @@ export const pricePercDiff = (targetFrom: number, targetTo: number) => {
   return percDiff
 }
 
-export const formatDate = (date: string) => {
+export const formatDateShort = (date: string) => {
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
     year: 'numeric',
   })
+}
+
+export const formatDateLong = (date: string) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+export const formatPrice = (price: number) => {
+  return price.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  })
+}
+
+export const modalDt = ref({
+  root: {
+    background: '{slate.200}',
+  },
+})
+
+export const tagDt = ref({
+  root: { fontSize: '1rem' },
+})
+
+export const tableDt = ref({
+  root: {
+    background: '{white}',
+  },
+})
+
+export const rowClass = () => {
+  return 'cursor-pointer'
 }

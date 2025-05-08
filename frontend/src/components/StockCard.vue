@@ -1,10 +1,22 @@
 <script setup lang="ts">
-import { computed } from 'vue'
-import { priceAbsDiff, formatDate } from '@/utils/stock'
-import { ref } from 'vue'
+import {
+  priceAbsDiff,
+  formatDateShort,
+  modalDt,
+  getRatingSeverity,
+  formatPrice,
+  tagDt,
+} from '@/utils/stock'
 import StockModal from './StockModal.vue'
+import { BRAND_ID } from '@/config/config'
+import { computed, ref, onMounted } from 'vue'
 
-const visible = ref(false)
+const showModal = ref(false)
+const imageError = ref(false)
+
+const validImage = ref(false)
+const imageLoading = ref(true)
+const imageUrl = ref('')
 
 const props = defineProps({
   ticker: { type: String, required: true },
@@ -18,75 +30,138 @@ const props = defineProps({
   time: { type: String, required: true },
 })
 
-const modalStyle = ref({
-  root: {
-    background: '{slate.200}',
-  },
-})
-
 const getHeaderTag = computed(() => {
   const diff = priceAbsDiff(props.targetFrom, props.targetTo)
   if (diff > 0) {
     return {
-      text: 'Up',
+      text: 'Upgrade',
       severity: 'success',
     }
   } else if (diff < 0) {
     return {
-      text: 'Down',
+      text: 'Downgrade',
       severity: 'danger',
     }
   } else {
     return {
-      text: 'Neutral',
+      text: 'Remain',
       severity: 'secondary',
     }
   }
 })
 
-const cardSections = computed(() => [
-  {
+const getPriceColor = computed(() => {
+  const diff = priceAbsDiff(props.targetFrom, props.targetTo)
+  if (diff > 0) {
+    return 'text-green-500'
+  } else if (diff < 0) {
+    return 'text-red-500'
+  } else {
+    return 'text-gray-500'
+  }
+})
+
+const priceSection = computed(() => {
+  return {
     label: 'Price:',
-    fromValue: `$${props.targetFrom}`,
-    toValue: `$${props.targetTo}`,
-  },
-  {
+    fromValue: formatPrice(props.targetFrom),
+    toValue: formatPrice(props.targetTo),
+  }
+})
+
+const ratingSection = computed(() => {
+  return {
     label: 'Rating:',
-    fromValue: props.ratingFrom,
     toValue: props.ratingTo,
-    capitalize: true,
-  },
-])
+  }
+})
+
+const brandImageUrl = computed(() => {
+  return `https://cdn.brandfetch.io/${props.ticker}?c=${BRAND_ID}`
+})
+
+const validateImageSize = async () => {
+  imageLoading.value = true
+  try {
+    const response = await fetch(brandImageUrl.value)
+    if (!response.ok) throw Error
+
+    const length = response.headers.get('Content-Length')
+    if (length) {
+      const size = parseInt(length, 10)
+      validImage.value = size > 500
+      imageUrl.value = brandImageUrl.value
+    } else {
+      validImage.value = false
+    }
+  } catch (error) {
+    console.error('Error loading image:', error)
+    imageError.value = true
+  } finally {
+    imageLoading.value = false
+  }
+}
+
+onMounted(() => {
+  validateImageSize()
+})
 </script>
 <template>
   <div
-    class="bg-white rounded-lg shadow-md p-4 min-w-3xs flex flex-col gap-1"
-    @click="visible = true"
+    class="flex h-full min-w-3xs cursor-pointer flex-col justify-between rounded-lg bg-white p-4 transition duration-300 ease-in-out hover:-translate-y-1 hover:scale-105 dark:bg-stone-900"
+    @click="showModal = true"
   >
-    <div class="flex items-center gap-2">
-      <span class="font-bold text-lg text-black"> {{ props.ticker }} </span>
-      <Tag :severity="getHeaderTag.severity">
-        {{ getHeaderTag.text }}
-      </Tag>
+    <div class="flex flex-col gap-2">
+      <div class="flex items-center gap-2">
+        <img
+          v-if="validImage && !imageError"
+          :src="imageUrl"
+          class="size-8"
+          @error="imageError = true"
+        />
+        <span class="text-xl font-bold text-black dark:text-white"> {{ props.ticker }} </span>
+        <Tag :severity="getHeaderTag.severity" :dt="tagDt">
+          {{ getHeaderTag.text }}
+        </Tag>
+      </div>
+      <span class="text-md mb-3 w-3/4 text-gray-700 capitalize dark:text-slate-200">{{
+        props.company
+      }}</span>
     </div>
-    <span class="text-gray-700 text-sm mb-3">{{ props.company }}</span>
 
-    <div v-for="(section, index) in cardSections" :key="index" class="flex flex-col gap-1">
-      <span class="text-black font-semibold">{{ section.label }}</span>
-      <div class="flex items-center gap-1">
-        <span class="text-gray-500 line-through" :class="{ capitalize: section.capitalize }">
-          {{ section.fromValue }}
-        </span>
-        <i class="pi pi-arrow-right" style="font-size: 0.75rem"></i>
-        <span class="text-black" :class="{ capitalize: section.capitalize }">
-          {{ section.toValue }}
-        </span>
+    <div class="flex flex-col gap-2">
+      <div class="flex flex-row items-center gap-2 text-lg">
+        <span class="font-semibold text-black dark:text-white">{{ priceSection.label }}</span>
+        <div class="flex items-center gap-2">
+          <span class="text-slate-500 capitalize line-through dark:text-slate-300">
+            {{ priceSection.fromValue }}
+          </span>
+          <i class="pi pi-arrow-right" style="font-size: 0.75rem"></i>
+          <span class="text-black capitalize" :class="getPriceColor">
+            {{ priceSection.toValue }}
+          </span>
+        </div>
+      </div>
+
+      <div class="flex flex-row items-center gap-2 text-lg">
+        <span class="font-semibold text-black dark:text-white">{{ ratingSection.label }}</span>
+        <Tag :severity="getRatingSeverity(props.ratingTo)" class="size-sm capitalize" :dt="tagDt">
+          {{ props.ratingTo }}
+        </Tag>
+      </div>
+
+      <div class="text-sm text-gray-500 dark:text-gray-300">
+        Last update: {{ formatDateShort(props.time) }}
       </div>
     </div>
-
-    <div class="text-xs text-gray-500">{{ props.brokerage }} • {{ formatDate(props.time) }}</div>
   </div>
-  <Dialog v-model:visible="visible" modal header="Stock details" class="min-w-xl" :dt="modalStyle">
+  <Dialog
+    v-model:visible="showModal"
+    modal
+    header="Stock details"
+    :dt="modalDt"
+    :dismissableMask="true"
+  >
     <StockModal
       :ticker="props.ticker"
       :action="props.action"

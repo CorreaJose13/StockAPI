@@ -8,14 +8,19 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    Button: typeof import('primevue/button')['default']
+    Carousel: typeof import('primevue/carousel')['default']
     Column: typeof import('primevue/column')['default']
     DashboardSection: typeof import('./src/components/DashboardSection.vue')['default']
     DataTable: typeof import('primevue/datatable')['default']
     Dialog: typeof import('primevue/dialog')['default']
+    HomeHeader: typeof import('./src/components/HomeHeader.vue')['default']
     IconField: typeof import('primevue/iconfield')['default']
     InfoCard: typeof import('./src/components/InfoCard.vue')['default']
     InputIcon: typeof import('primevue/inputicon')['default']
     InputText: typeof import('primevue/inputtext')['default']
+    LatestSection: typeof import('./src/components/LatestSection.vue')['default']
+    MainHeader: typeof import('./src/components/MainHeader.vue')['default']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     SearchIcon: typeof import('./src/components/icons/SearchIcon.vue')['default']
@@ -23,6 +28,7 @@ declare module 'vue' {
     StockCarousel: typeof import('./src/components/StockCarousel.vue')['default']
     StockModal: typeof import('./src/components/StockModal.vue')['default']
     Tag: typeof import('primevue/tag')['default']
+    ViewAllCTA: typeof import('./src/components/ViewAllCTA.vue')['default']
     ViewHeader: typeof import('./src/components/ViewHeader.vue')['default']
   }
 }
