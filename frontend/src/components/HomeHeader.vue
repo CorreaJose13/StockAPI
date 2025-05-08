@@ -55,7 +55,7 @@ const metricsCards = computed(() => {
     {
       title: 'Remains',
       value: metricsStore.remain,
-      color: 'text-slate-500',
+      color: 'text-sky-700',
       description: metricsPercentage.value.remain,
     },
   ]
@@ -68,10 +68,7 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div
-    class="flex h-48 w-full items-center justify-center mask-b-from-80% bg-cover bg-center bg-no-repeat"
-    :style="{ backgroundImage: `url(${graph})` }"
-  >
+  <div class="flex h-48 w-full items-center justify-center">
     <div class="flex w-full max-w-screen-2xl flex-row items-center justify-between">
       <span>
         <h1 class="text-5xl font-bold text-white">{{ props.title }}</h1>
