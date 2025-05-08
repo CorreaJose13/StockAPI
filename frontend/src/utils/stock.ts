@@ -1,3 +1,5 @@
+import { ref } from 'vue'
+
 export const getRatingSeverity = (rating: string) => {
   switch (rating) {
     case 'sell':
@@ -54,3 +56,9 @@ export const formatDate = (date: string) => {
     year: 'numeric',
   })
 }
+
+export const modalStyle = ref({
+  root: {
+    background: '{slate.200}',
+  },
+})
