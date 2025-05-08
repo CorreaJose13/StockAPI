@@ -49,7 +49,7 @@ export const pricePercDiff = (targetFrom: number, targetTo: number) => {
   return percDiff
 }
 
-export const formatDate = (date: string) => {
+export const formatDateShort = (date: string) => {
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
     day: 'numeric',
@@ -57,8 +57,31 @@ export const formatDate = (date: string) => {
   })
 }
 
+export const formatDateLong = (date: string) => {
+  return new Date(date).toLocaleDateString('en-US', {
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  })
+}
+
+export const formatPrice = (price: number) => {
+  return price.toLocaleString('en-US', {
+    style: 'currency',
+    currency: 'USD',
+  })
+}
+
 export const modalStyle = ref({
   root: {
     background: '{slate.200}',
+  },
+})
+
+export const tagStyle = ref({
+  root: {
+    fontSize: '1.125rem',
+    lineHeight: 'calc(1.75 / 1.125)',
   },
 })
