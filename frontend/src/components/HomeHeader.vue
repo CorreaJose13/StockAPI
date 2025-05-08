@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useMetricsStore } from '@/stores/metrics'
 import graph from '@/assets/graph.jpg'
 
@@ -14,6 +14,7 @@ const props = defineProps({
   },
 })
 
+const isLoading = ref(false)
 const metricsStore = useMetricsStore()
 
 const metricsPercentage = computed(() => {
@@ -61,7 +62,9 @@ const metricsCards = computed(() => {
 })
 
 onMounted(async () => {
+  isLoading.value = true
   await metricsStore.fetchIfNeeded()
+  isLoading.value = false
 })
 </script>
 <template>
@@ -75,7 +78,7 @@ onMounted(async () => {
         <h2 class="text-xl text-white">{{ props.description }}</h2>
       </span>
 
-      <section class="animate-fade-in-y flex flex-row gap-4">
+      <section v-if="!isLoading" class="animate-fade-in-y flex flex-row gap-4">
         <InfoCard
           v-for="(item, key) in metricsCards"
           :key="key"
