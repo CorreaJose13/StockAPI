@@ -1,10 +1,6 @@
 <script setup lang="ts">
-import {
-  getRatingSeverity,
-  getTargetSeverity,
-  getTargetArrow,
-  formatDateShort,
-} from '@/utils/stock'
+import { getRatingSeverity, getTargetSeverity, tableDt, rowClass } from '@/utils/stock'
+import { getTargetArrow, formatDateShort, modalDt } from '@/utils/stock'
 import { onMounted, ref, computed, watch } from 'vue'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
@@ -38,6 +34,10 @@ const onSort = (event: any) => {
   stocksStore.fetchData(currentPage.value, limit.value, field.value, formatOrder(order.value))
 }
 
+const formatOrder = (order: number) => {
+  return order === -1 ? 'desc' : order === 1 ? 'asc' : ''
+}
+
 const debouncedSearch = useDebounceFn((query: string) => {
   currentPage.value = 1
   stocksStore.fetchData(
@@ -49,12 +49,6 @@ const debouncedSearch = useDebounceFn((query: string) => {
   )
 }, 500)
 
-const modalStyle = ref({
-  root: {
-    background: '{slate.200}',
-  },
-})
-
 watch(searchQuery, (newValue) => {
   debouncedSearch(newValue)
 })
@@ -63,8 +57,8 @@ const stocksTableTexts = computed(() => {
   return {
     title: 'Ratings Overview',
     description:
-      'Quickly view stock tickers, companies, brokerage actions, ratings, and target prices.',
-    placeholder: 'Search by ticker, company, or brokerage',
+      'Quickly view tickers, prices, and analyst ratings. Click on a stock to see more details.',
+    placeholder: 'Search by ticker, company, or analyst',
   }
 })
 
@@ -72,7 +66,7 @@ const tableColumns = computed(() => [
   {
     field: 'ticker',
     header: 'Ticker',
-    class: 'text-sm font-bold text-black',
+    class: 'font-bold',
     style: 'width: 5%',
     sortable: true,
     template: (data: Stock) => data.ticker,
@@ -80,7 +74,6 @@ const tableColumns = computed(() => [
   {
     field: 'company',
     header: 'Company',
-    class: 'text-sm text-black',
     style: 'width: 20%',
     sortable: true,
     template: (data: Stock) => data.company,
@@ -88,7 +81,6 @@ const tableColumns = computed(() => [
   {
     field: 'brokerage',
     header: 'Analyst',
-    class: 'text-sm text-black',
     style: 'width: 15%',
     sortable: true,
     template: (data: Stock) => data.brokerage,
@@ -96,7 +88,6 @@ const tableColumns = computed(() => [
   {
     field: 'time',
     header: 'Date',
-    class: 'text-sm text-black',
     style: 'width: 10%',
     sortable: true,
     template: (data: Stock) => formatDateShort(data.time),
@@ -104,43 +95,29 @@ const tableColumns = computed(() => [
   {
     field: 'action',
     header: 'Action',
-    class: 'text-sm text-black capitalize',
     style: 'width: 15%',
     sortable: false,
     template: (data: Stock) => data.action,
   },
 ])
 
-const rowClass = () => {
-  return 'cursor-pointer'
-}
-
-const formatOrder = (order: number) => {
-  return order === -1 ? 'desc' : order === 1 ? 'asc' : ''
-}
-
 onMounted(async () => {
   await stocksStore.fetchInitialDataIfNeeded()
 })
 </script>
 <template>
-  <div class="mx-auto max-h-screen max-w-screen-2xl">
-    <ViewHeader :title="stocksTableTexts.title" :description="stocksTableTexts.description" />
+  <div class="mx-auto max-w-screen-2xl">
+    <div class="flex flex-row items-end justify-between">
+      <ViewHeader :title="stocksTableTexts.title" :description="stocksTableTexts.description" />
+      <IconField class="py-4">
+        <InputIcon>
+          <i class="pi pi-search" />
+        </InputIcon>
+        <InputText v-model="searchQuery" :placeholder="stocksTableTexts.placeholder" class="w-xl" />
+      </IconField>
+    </div>
     <section>
-      <div class="mb-4 flex justify-start">
-        <IconField>
-          <InputIcon>
-            <i class="pi pi-search" />
-          </InputIcon>
-          <InputText
-            v-model="searchQuery"
-            :placeholder="stocksTableTexts.placeholder"
-            class="w-xl"
-          />
-        </IconField>
-      </div>
       <DataTable
-        class="border-1 border-gray-200 shadow-sm"
         :value="stocksStore.stocks"
         :totalRecords="stocksStore.total"
         :loading="stocksStore.loading"
@@ -151,13 +128,13 @@ onMounted(async () => {
         :rowsPerPageOptions="[10, 20, 50, 100]"
         @page="onPage"
         scrollable
-        scrollHeight="40rem"
         :sortField="field"
         :sortOrder="order"
         @sort="onSort"
         :rowHover="true"
         :rowClass="rowClass"
         @row-click="onRowSelect"
+        :dt="tableDt"
       >
         <Column
           v-for="col in tableColumns"
@@ -165,6 +142,7 @@ onMounted(async () => {
           :field="col.field"
           :header="col.header"
           :class="col.class"
+          class="text-sm text-black dark:text-white"
           :style="col.style"
           :sortable="col.sortable"
         >
@@ -173,7 +151,7 @@ onMounted(async () => {
           </template>
         </Column>
 
-        <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
+        <Column field="target" header="Price" class="text-sm text-black">
           <template #body="{ data }">
             <div class="flex flex-row items-center gap-2">
               <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
@@ -189,7 +167,8 @@ onMounted(async () => {
             </div></template
           >
         </Column>
-        <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
+
+        <Column field="rating" header="Rating" class="text-sm text-black">
           <template #body="{ data }">
             <div class="flex flex-row items-center gap-2">
               <Tag
@@ -212,8 +191,7 @@ onMounted(async () => {
         v-model:visible="showModal"
         modal
         header="Stock details"
-        class="min-w-xl"
-        :dt="modalStyle"
+        :dt="modalDt"
         :dismissableMask="true"
       >
         <StockModal
@@ -232,3 +210,8 @@ onMounted(async () => {
     </section>
   </div>
 </template>
+<style scoped>
+:deep(.p-paginator) {
+  border-radius: 0;
+}
+</style>
