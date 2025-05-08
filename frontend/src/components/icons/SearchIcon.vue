@@ -1,6 +1,6 @@
 <template>
   <button
-    class="absolute h-8 w-8 right-1 top-1 my-auto px-2 flex items-center bg-white rounded"
+    class="absolute top-1 right-1 my-auto flex h-8 w-8 items-center rounded bg-white px-2"
     type="button"
   >
     <svg
@@ -9,7 +9,7 @@
       viewBox="0 0 24 24"
       stroke-width="3"
       stroke="currentColor"
-      class="w-8 h-8 text-slate-600"
+      class="h-8 w-8 text-slate-600"
     >
       <path
         stroke-linecap="round"
