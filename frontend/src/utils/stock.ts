@@ -73,15 +73,25 @@ export const formatPrice = (price: number) => {
   })
 }
 
-export const modalStyle = ref({
+export const modalDt = ref({
   root: {
     background: '{slate.200}',
   },
 })
 
-export const tagStyle = ref({
+export const tagDt = ref({
   root: {
     fontSize: '1.125rem',
     lineHeight: 'calc(1.75 / 1.125)',
   },
 })
+
+export const tableDt = ref({
+  root: {
+    background: '{white}',
+  },
+})
+
+export const rowClass = () => {
+  return 'cursor-pointer'
+}
