@@ -1,9 +1,14 @@
 <script setup lang="ts">
+import {
+  getRatingSeverity,
+  getTargetSeverity,
+  getTargetArrow,
+  formatDateShort,
+} from '@/utils/stock'
 import { onMounted, ref, computed, watch } from 'vue'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
-import { getRatingSeverity, getTargetSeverity, getTargetArrow, formatDate } from '@/utils/stock'
-import { useStocksStore } from '@/stores/stocks'
+import { useStocksStore } from '@/stores/pagination'
 
 const stocksStore = useStocksStore()
 
@@ -56,7 +61,7 @@ watch(searchQuery, (newValue) => {
 
 const stocksTableTexts = computed(() => {
   return {
-    title: 'Stock Ratings Overview',
+    title: 'Ratings Overview',
     description:
       'Quickly view stock tickers, companies, brokerage actions, ratings, and target prices.',
     placeholder: 'Search by ticker, company, or brokerage',
@@ -94,13 +99,13 @@ const tableColumns = computed(() => [
     class: 'text-sm text-black',
     style: 'width: 10%',
     sortable: true,
-    template: (data: Stock) => formatDate(data.time),
+    template: (data: Stock) => formatDateShort(data.time),
   },
   {
     field: 'action',
     header: 'Action',
     class: 'text-sm text-black capitalize',
-    style: '',
+    style: 'width: 15%',
     sortable: false,
     template: (data: Stock) => data.action,
   },
@@ -119,10 +124,10 @@ onMounted(async () => {
 })
 </script>
 <template>
-  <div class="max-w-screen-2xl max-h-screen mx-auto p-4">
+  <div class="mx-auto max-h-screen max-w-screen-2xl">
     <ViewHeader :title="stocksTableTexts.title" :description="stocksTableTexts.description" />
     <section>
-      <div class="flex justify-start mb-4">
+      <div class="mb-4 flex justify-start">
         <IconField>
           <InputIcon>
             <i class="pi pi-search" />
@@ -135,6 +140,7 @@ onMounted(async () => {
         </IconField>
       </div>
       <DataTable
+        class="border-1 border-gray-200 shadow-sm"
         :value="stocksStore.stocks"
         :totalRecords="stocksStore.total"
         :loading="stocksStore.loading"
@@ -166,27 +172,10 @@ onMounted(async () => {
             <span>{{ col.template(data) }}</span>
           </template>
         </Column>
-        <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
-          <template #body="{ data }">
-            <div class="flex flex-row gap-2 items-center">
-              <Tag
-                class="capitalize text-sm"
-                :value="data.rating_from"
-                :severity="getRatingSeverity(data.rating_from)"
-              />
-              <i class="pi pi-arrow-right text-gray-500" style="font-size: 0.75rem"></i>
-              <Tag
-                class="capitalize text-sm"
-                :value="data.rating_to"
-                :severity="getRatingSeverity(data.rating_to)"
-              />
-            </div>
-          </template>
-          ></Column
-        >
+
         <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
           <template #body="{ data }">
-            <div class="flex flex-row gap-2 items-center">
+            <div class="flex flex-row items-center gap-2">
               <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
               <i
                 :class="getTargetArrow(data.target_from, data.target_to)"
@@ -200,6 +189,24 @@ onMounted(async () => {
             </div></template
           >
         </Column>
+        <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
+          <template #body="{ data }">
+            <div class="flex flex-row items-center gap-2">
+              <Tag
+                class="text-sm capitalize"
+                :value="data.rating_from"
+                :severity="getRatingSeverity(data.rating_from)"
+              />
+              <i class="pi pi-arrow-right text-gray-500" style="font-size: 0.75rem"></i>
+              <Tag
+                class="text-sm capitalize"
+                :value="data.rating_to"
+                :severity="getRatingSeverity(data.rating_to)"
+              />
+            </div>
+          </template>
+          ></Column
+        >
       </DataTable>
       <Dialog
         v-model:visible="showModal"
