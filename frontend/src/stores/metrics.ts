@@ -1,6 +1,8 @@
-import { defineStore } from 'pinia'
-import { API_URL } from '@/config/config'
 import type { MetricsResponse } from '@/types/types'
+import { CACHE_TIMEOUT } from '@/constants/constants'
+import { API_URL } from '@/config/config'
+import { defineStore } from 'pinia'
+
 import axios from 'axios'
 
 export const useMetricsStore = defineStore('metrics', {
@@ -20,8 +22,7 @@ export const useMetricsStore = defineStore('metrics', {
     isStale: (state) => {
       if (!state.lastFetched) return true
 
-      const staleTimeInMs = 60 * 60 * 1000 // 1 hour
-      return Date.now() - state.lastFetched > staleTimeInMs
+      return Date.now() - state.lastFetched > CACHE_TIMEOUT
     },
   },
 

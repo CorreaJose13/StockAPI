@@ -6,3 +6,5 @@ export const HTTP_STATUS = {
   NOT_FOUND: 404,
   INTERNAL_SERVER_ERROR: 500,
 }
+
+export const CACHE_TIMEOUT = 60 * 60 * 1000 // 1 hour
