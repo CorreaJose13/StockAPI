@@ -2,6 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { Stock, StockWithScore } from '@/types/types'
 import { getRatingSeverity, getTargetArrow, getTargetSeverity } from '@/utils/stock'
+import { formatDateShort, modalDt } from '@/utils/stock'
 import { useAnalysisStore } from '@/stores/analysis'
 
 const analysisStore = useAnalysisStore()
@@ -9,19 +10,12 @@ const analysisStore = useAnalysisStore()
 const selectedStock = ref<Stock | null>(null)
 const showModal = ref(false)
 
-const currentPage = ref(1)
 const limit = ref(10)
 
 const onRowSelect = (event: any) => {
   selectedStock.value = event.data
   showModal.value = true
 }
-
-const modalStyle = ref({
-  root: {
-    background: '{slate.200}',
-  },
-})
 
 const indexedStocksScore = computed(() => {
   return analysisStore.stocks.map((stock, idx) => ({
@@ -33,9 +27,7 @@ const indexedStocksScore = computed(() => {
 const insightTexts = computed(() => {
   return {
     title: 'Market Insights',
-    description: 'Explore market trends and expert analysis in the stock market.',
-    insightsTitle: 'Suggested Stocks',
-    sectorsTitle: 'Sector Highlights',
+    description: 'Explore our buy suggestions in the stock market.',
   }
 })
 
@@ -47,42 +39,35 @@ const tableColumns = computed(() => [
   {
     field: 'ranking',
     header: 'Rank',
-    class: 'text-sm font-bold text-black',
+    class: 'font-semibold',
     style: 'width: 5%',
-    sortable: false,
     template: (data: StockWithScore) => data.index,
   },
   {
     field: 'ticker',
     header: 'Ticker',
-    class: 'text-sm font-bold text-black',
+    class: 'font-bold',
     style: 'width: 5%',
-    sortable: false,
     template: (data: StockWithScore) => data.ticker,
   },
   {
     field: 'company',
     header: 'Company',
-    class: 'text-sm text-black',
     style: 'width: 20%',
-    sortable: false,
     template: (data: StockWithScore) => data.company,
   },
   {
     field: 'brokerage',
     header: 'Analyst',
-    class: 'text-sm text-black',
     style: 'width: 15%',
-    sortable: false,
     template: (data: StockWithScore) => data.brokerage,
   },
   {
-    field: 'action',
-    header: 'Action',
-    class: 'text-sm text-black capitalize',
-    style: '',
-    sortable: false,
-    template: (data: StockWithScore) => data.action,
+    field: 'time',
+    header: 'Date',
+    style: 'width: 10%',
+    sortable: true,
+    template: (data: Stock) => formatDateShort(data.time),
   },
 ])
 
@@ -91,23 +76,18 @@ const rowClass = () => {
 }
 </script>
 <template>
-  <div class="mx-auto max-h-screen max-w-screen-2xl p-4">
-    <ViewHeader :title="insightTexts.title" :description="insightTexts.description" />
-    <section class="mt-4 flex w-full flex-col gap-2 py-4">
-      <div class="flex flex-row items-center gap-2">
-        <i class="pi pi-briefcase text-white"></i>
-        <h2 class="text-start text-xl font-bold text-white">{{ insightTexts.insightsTitle }}</h2>
-      </div>
-    </section>
+  <div class="mx-auto max-w-screen-2xl">
+    <div class="py-4">
+      <ViewHeader :title="insightTexts.title" :description="insightTexts.description" />
+    </div>
     <DataTable
       :value="indexedStocksScore"
       :loading="analysisStore.loading"
       paginator
-      :first="(currentPage - 1) * limit"
       :rows="limit"
-      :rowsPerPageOptions="[10, 20]"
+      :rowsPerPageOptions="[10, 20, 50]"
       scrollable
-      scrollHeight="40rem"
+      scroll-height="40rem"
       :rowHover="true"
       :rowClass="rowClass"
       @row-click="onRowSelect"
@@ -118,14 +98,30 @@ const rowClass = () => {
         :field="col.field"
         :header="col.header"
         :class="col.class"
+        class="text-sm text-black dark:text-white"
         :style="col.style"
-        :sortable="col.sortable"
       >
         <template #body="{ data }">
-          <span class="capitalize">{{ col.template(data) }}</span>
+          <span>{{ col.template(data) }}</span>
         </template>
       </Column>
-      <Column field="rating" header="Rating" class="text-sm text-black" style="width: 25%">
+
+      <Column field="target" header="Price" class="text-sm text-black">
+        <template #body="{ data }">
+          <div class="flex flex-row items-center gap-2">
+            <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
+            <i
+              :class="getTargetArrow(data.target_from, data.target_to)"
+              style="font-size: 0.75rem"
+            ></i>
+            <Tag class="capitalize" :severity="getTargetSeverity(data.target_from, data.target_to)"
+              >$ {{ data.target_to }}</Tag
+            >
+          </div></template
+        >
+      </Column>
+
+      <Column field="rating" header="Rating" class="text-sm text-black">
         <template #body="{ data }">
           <div class="flex flex-row items-center gap-2">
             <Tag
@@ -143,27 +139,12 @@ const rowClass = () => {
         </template>
         ></Column
       >
-      <Column field="target" header="Price" class="text-sm text-black" style="width: 15%">
-        <template #body="{ data }">
-          <div class="flex flex-row items-center gap-2">
-            <Tag class="capitalize" severity="secondary">$ {{ data.target_from }}</Tag>
-            <i
-              :class="getTargetArrow(data.target_from, data.target_to)"
-              style="font-size: 0.75rem"
-            ></i>
-            <Tag class="capitalize" :severity="getTargetSeverity(data.target_from, data.target_to)"
-              >$ {{ data.target_to }}</Tag
-            >
-          </div></template
-        >
-      </Column>
     </DataTable>
     <Dialog
       v-model:visible="showModal"
       modal
       header="Stock details"
-      class="min-w-xl"
-      :dt="modalStyle"
+      :dt="modalDt"
       :dismissableMask="true"
     >
       <StockModal
@@ -181,3 +162,8 @@ const rowClass = () => {
     </Dialog>
   </div>
 </template>
+<style scoped>
+:deep(.p-paginator) {
+  border-radius: 0;
+}
+</style>
