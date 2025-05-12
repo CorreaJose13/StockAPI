@@ -1,9 +1,12 @@
 <script setup lang="ts">
-import { onMounted, ref, computed } from 'vue'
-import type { ChartData, ChartOptions } from '@/types/chart'
-import { priceAbsDiff, pricePercDiff, formatDateLong } from '@/utils/stock'
+import { priceAbsDiff, pricePercDiff, formatDateLong, formatAction } from '@/utils/stock'
+import { modalTagDt, modalTagDtXl, formatPrice, getRatingSeverity } from '@/utils/stock'
+import { validateImageSize, brandImageUrl } from '@/utils/stock'
+import { computed, onMounted, ref } from 'vue'
+import StockChart from './StockChart.vue'
 
 const props = defineProps({
+  srcUrl: { type: String },
   ticker: { type: String, required: true },
   action: { type: String, required: true },
   company: { type: String, required: true },
@@ -15,174 +18,126 @@ const props = defineProps({
   time: { type: String, required: true },
 })
 
-const chartData = ref<ChartData | null>(null)
-const chartOptions = ref<ChartOptions | null>(null)
-
-onMounted(() => {
-  chartData.value = setChartData()
-  chartOptions.value = setChartOptions()
-})
-
-const setChartData = (): ChartData => {
-  const documentStyle = getComputedStyle(document.documentElement)
-
-  return {
-    labels: ['January', 'February', 'March', 'April', 'May', 'June', 'July'],
-    datasets: [
-      {
-        label: 'Dataset 1',
-        fill: false,
-        borderColor: documentStyle.getPropertyValue('--p-cyan-500'),
-        yAxisID: 'y',
-        tension: 0.4,
-        data: [65, 59, 80, 81, 56, 55, 10],
-      },
-    ],
-  }
-}
-
-const setChartOptions = (): ChartOptions => {
-  const documentStyle = getComputedStyle(document.documentElement)
-  const textColor = documentStyle.getPropertyValue('--p-text-color')
-  const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color')
-  const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color')
-
-  return {
-    stacked: false,
-    maintainAspectRatio: false,
-    aspectRatio: 0.6,
-    plugins: {
-      legend: {
-        labels: {
-          color: textColor,
-        },
-      },
-    },
-    scales: {
-      x: {
-        ticks: {
-          color: textColorSecondary,
-        },
-        grid: {
-          color: surfaceBorder,
-        },
-      },
-      y: {
-        type: 'linear',
-        display: true,
-        position: 'left',
-        ticks: {
-          color: textColorSecondary,
-        },
-        grid: {
-          color: surfaceBorder,
-        },
-      },
-      y1: {
-        type: 'linear',
-        display: true,
-        position: 'right',
-        ticks: {
-          color: textColorSecondary,
-        },
-        grid: {
-          drawOnChartArea: false,
-          color: surfaceBorder,
-        },
-      },
-    },
-  }
-}
+const imageUrl = ref('')
+const imageError = ref(false)
 
 const modalTexts = computed(() => {
   return {
-    price: 'Price:',
-    rating: 'Rating:',
-    analysisBy: 'Analysis by:',
+    price: '💰 Price target',
+    rating: '📝 Rating',
+    action: 'Action:',
   }
 })
 
-const getAbsSeverity = (from: number, to: number) => {
-  const diff = Number(priceAbsDiff(from, to))
-  if (diff > 0) {
+const getNumberSeverity = (number: number) => {
+  if (number > 0) {
     return 'success'
-  } else if (diff < 0) {
+  } else if (number < 0) {
     return 'danger'
   } else {
     return 'secondary'
   }
 }
+const getAbsSeverity = (from: number, to: number) => {
+  const absDiff = Number(priceAbsDiff(from, to))
+  return getNumberSeverity(absDiff)
+}
 
 const getPercSeverity = (from: number, to: number) => {
-  const diff = Number(pricePercDiff(from, to))
-  if (diff > 0) {
-    return 'success'
-  } else if (diff < 0) {
-    return 'danger'
-  } else {
-    return 'secondary'
-  }
+  const percDiff = Number(pricePercDiff(from, to))
+  return getNumberSeverity(percDiff)
 }
 
 const getPerc = computed(() => {
   const percDiff = pricePercDiff(props.targetFrom, props.targetTo)
   return `${Number(percDiff).toFixed(2)}%`
 })
+
+onMounted(async () => {
+  if (!props.srcUrl) {
+    try {
+      const url = await validateImageSize(props.ticker)
+      if (url) {
+        imageUrl.value = url
+      }
+    } catch (error) {
+      imageError.value = true
+    }
+  } else {
+    imageUrl.value = props.srcUrl
+  }
+})
 </script>
 <template>
-  <div class="flex flex-col">
-    <div class="mb-1 flex items-center gap-2">
-      <span class="text-2xl font-bold text-black"> {{ props.ticker }} </span>
-      <span class="rounded-full bg-slate-500 px-2 py-0.5 text-xs text-white">
-        {{ props.action }}
-      </span>
+  <div class="flex flex-col gap-2">
+    <div class="flex items-center justify-between">
+      <div class="flex flex-row items-center gap-2">
+        <img v-if="imageUrl && !imageError" :src="imageUrl" class="size-14" />
+        <span class="text-2xl font-bold text-black dark:text-white"> {{ props.ticker }} </span>
+      </div>
+      <button
+        class="text-md rounded-full bg-gray-400 px-4 py-1 font-semibold text-white capitalize"
+      >
+        {{ props.brokerage }}
+      </button>
     </div>
-    <div class="mb-3 text-sm text-gray-600">{{ props.company }}</div>
+    <span class="mb-3 w-3/4 text-lg text-gray-700 capitalize dark:text-slate-200">{{
+      props.company
+    }}</span>
   </div>
 
-  <div class="mt-2 mb-4 flex flex-grow gap-4">
-    <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
-      <div class="flex flex-col">
-        <span class="font-semibold text-black"> {{ modalTexts.price }}</span>
-        <div class="flex flex-grow items-center gap-4">
-          <span class="w-full flex-1 text-2xl font-bold text-black">${{ props.targetTo }}</span>
-          <div class="flex flex-1 flex-col gap-2">
-            <span class="text-gray-500 line-through">${{ props.targetFrom }}</span>
-            <div class="flex gap-2">
-              <Tag :value="getPerc" :severity="getPercSeverity(props.targetFrom, props.targetTo)">
-              </Tag>
-              <Tag
-                :value="`$${priceAbsDiff(props.targetFrom, props.targetTo)}`"
-                :severity="getAbsSeverity(props.targetFrom, props.targetTo)"
-              ></Tag>
-            </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div class="rounded-xl bg-stone-200 p-4">
+      <div class="flex flex-col gap-2">
+        <span class="text-md font-medium text-black"> {{ modalTexts.price }}</span>
+        <section class="flex items-center gap-2">
+          <span class="text-md text-gray-600 capitalize line-through">{{
+            formatPrice(props.targetFrom)
+          }}</span>
+          <span class="text-2xl font-bold text-black capitalize">{{
+            formatPrice(props.targetTo)
+          }}</span>
+          <div class="flex gap-2">
+            <Tag
+              :value="formatPrice(priceAbsDiff(props.targetFrom, props.targetTo))"
+              :severity="getAbsSeverity(props.targetFrom, props.targetTo)"
+              :dt="modalTagDt"
+            ></Tag>
+            <Tag
+              :value="getPerc"
+              :severity="getPercSeverity(props.targetFrom, props.targetTo)"
+              :dt="modalTagDt"
+            >
+            </Tag>
           </div>
-        </div>
+        </section>
       </div>
     </div>
 
-    <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
-      <div class="flex flex-col">
-        <span class="font-semibold text-black"> {{ modalTexts.rating }}</span>
-        <section class="my-2 flex flex-col">
-          <span class="text-2xl font-bold text-black capitalize">{{ props.ratingTo }}</span>
-          <span class="text-gray-500 capitalize line-through">{{ props.ratingFrom }}</span>
+    <div class="rounded-xl bg-stone-200 p-4">
+      <div class="flex flex-col gap-2">
+        <span class="text-md font-medium text-black"> {{ modalTexts.rating }}</span>
+        <section class="flex items-center gap-2">
+          <span class="text-md text-gray-600 capitalize line-through">{{ props.ratingFrom }}</span>
+          <Tag
+            :severity="getRatingSeverity(props.ratingTo)"
+            class="size-sm capitalize"
+            :dt="modalTagDtXl"
+          >
+            {{ props.ratingTo }}
+          </Tag>
         </section>
       </div>
     </div>
   </div>
 
-  <div class="flex-1 rounded-lg bg-white p-4 shadow-md outline">
-    <div class="flex flex-col">
-      <span class="font-semibold text-black">{{ modalTexts.analysisBy }}</span>
-      <div class="my-2 flex flex-row justify-between">
-        <span class="text-2xl text-black">{{ props.brokerage }}</span>
-        <div class="flex items-center gap-2">
-          <i class="pi pi-calendar text-black"></i>
-          <span class="text-black">{{ formatDateLong(props.time) }}</span>
-        </div>
-      </div>
+  <StockChart :ticker="props.ticker" class="my-6" />
+
+  <div class="mt-6 flex items-center justify-between gap-2">
+    <div class="flex flex-row gap-1">
+      <p>{{ modalTexts.action }}</p>
+      <span class="text-gray-600"> {{ formatAction(props.action) }}</span>
     </div>
+    <span class="text-gray-600">🗓️ {{ formatDateLong(props.time) }}</span>
   </div>
-  <div class="card"></div>
 </template>

@@ -3,7 +3,7 @@
 @import 'tailwindcss';
 
 @theme {
-  --animate-fade-in-y: fadeInY 1.5s ease-in;
+  --animate-fade-in-y: fadeInY 1.2s ease-in;
 
   @keyframes fadeInY {
     from {

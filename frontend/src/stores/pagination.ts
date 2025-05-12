@@ -97,12 +97,10 @@ export const useStocksStore = defineStore('stocks', {
           stocks: [...data.stocks],
           timestamp: now,
         })
-        console.log('Caching data for key:', cacheKey)
 
         this.trimCache()
       } catch (err: any) {
         this.error = err
-        console.error('Error fetching metrics:', err)
       } finally {
         this.loading = false
       }

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { getRatingSeverity, getTargetSeverity, tableDt, rowClass } from '@/utils/stock'
-import { getTargetArrow, formatDateShort, modalDt } from '@/utils/stock'
+import { getTargetArrow, formatDateShort, modalDt, formatAction } from '@/utils/stock'
 import { onMounted, ref, computed, watch } from 'vue'
 import type { Stock } from '@/types/types'
 import { useDebounceFn } from '@vueuse/core'
@@ -25,7 +25,13 @@ const onRowSelect = (event: any) => {
 const onPage = (event: any) => {
   currentPage.value = event.page + 1
   limit.value = event.rows
-  stocksStore.fetchData(currentPage.value, limit.value, field.value, formatOrder(order.value))
+  stocksStore.fetchData(
+    currentPage.value,
+    limit.value,
+    field.value,
+    formatOrder(order.value),
+    searchQuery.value,
+  )
 }
 
 const onSort = (event: any) => {
@@ -60,6 +66,10 @@ const stocksTableTexts = computed(() => {
       'Quickly view tickers, prices, and analyst ratings. Click on a stock to see more details.',
     placeholder: 'Search by ticker, company, or analyst',
   }
+})
+
+const totalRecords = computed(() => {
+  return searchQuery.value === '' ? stocksStore.total : stocksStore.stocks.length
 })
 
 const tableColumns = computed(() => [
@@ -97,7 +107,7 @@ const tableColumns = computed(() => [
     header: 'Action',
     style: 'width: 15%',
     sortable: false,
-    template: (data: Stock) => data.action,
+    template: (data: Stock) => formatAction(data.action),
   },
 ])
 
@@ -119,7 +129,7 @@ onMounted(async () => {
     <section>
       <DataTable
         :value="stocksStore.stocks"
-        :totalRecords="stocksStore.total"
+        :totalRecords="totalRecords"
         :loading="stocksStore.loading"
         :lazy="true"
         paginator
@@ -136,6 +146,8 @@ onMounted(async () => {
         :rowClass="rowClass"
         @row-click="onRowSelect"
         :dt="tableDt"
+        paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
+        currentPageReportTemplate="{first} to {last} of {totalRecords}"
       >
         <Column
           v-for="col in tableColumns"

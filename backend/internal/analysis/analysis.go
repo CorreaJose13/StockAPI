@@ -25,7 +25,7 @@ var (
 )
 
 const (
-	limitAnalysis    = 20
+	limitAnalysis    = 50
 	percChangeWeight = 25.0 / 100
 	absChangeWeight  = 15.0 / 100
 	timeWeight       = 15.0 / 100
