@@ -27,10 +27,10 @@ var (
 const (
 	limitAnalysis    = 50
 	percChangeWeight = 25.0 / 100
-	absChangeWeight  = 15.0 / 100
+	absChangeWeight  = 20.0 / 100
 	timeWeight       = 15.0 / 100
 	brokerageWeight  = 10.0 / 100
-	ratingWeight     = 20.0 / 100
+	ratingWeight     = 15.0 / 100
 	ratingDiffWeight = 10.0 / 100
 	actionWeight     = 5 / 100
 )
