@@ -26,6 +26,8 @@ func main() {
 		log.Fatalf("failed to initialize database repository: %v", err)
 	}
 
+	defer repo.Close()
+
 	repository.SetStockRepository(repo)
 
 	stocks := fetchStocks(cfg)
@@ -35,6 +37,7 @@ func main() {
 	if err := repository.BulkInsertStocks(context.Background(), formattedStocks); err != nil {
 		log.Fatalf("failed to insert stocks: %v", err)
 	}
+
 }
 
 func fetchStocks(cfg *config.Config) []models.Stock {
