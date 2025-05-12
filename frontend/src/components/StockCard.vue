@@ -69,7 +69,7 @@ const ratingSection = computed(() => {
 
 const timeSection = computed(() => {
   return {
-    title: 'Time:',
+    title: 'Last update:',
     value: formatDateShort(props.time),
   }
 })
@@ -137,7 +137,7 @@ onMounted(async () => {
     :dismissableMask="true"
   >
     <StockModal
-      :imageUrl="imageUrl"
+      :srcUrl="imageUrl"
       :ticker="props.ticker"
       :action="props.action"
       :company="props.company"
