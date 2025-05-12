@@ -40,14 +40,14 @@ onMounted(async () => {
         title="⭐ Top rated stocks"
         link="/stock-insights"
         :stocks="analysisStore.stocks"
-        class="animate-fade-in-y px-6"
+        class="animate-fade-in-y"
       />
       <LatestSection
         v-if="!isLoading"
         title="⏱️ Latest analyst ratings"
         link="/all-stocks"
         :stocks="latestStore.stocks"
-        class="animate-fade-in-y px-6"
+        class="animate-fade-in-y"
       />
     </div>
   </div>
