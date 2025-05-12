@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { BRAND_ID } from '@/config/config'
 
 export const getRatingSeverity = (rating: string) => {
   switch (rating) {
@@ -49,6 +50,10 @@ export const pricePercDiff = (targetFrom: number, targetTo: number) => {
   return percDiff
 }
 
+export const formatAction = (action: string) => {
+  return action.charAt(0).toUpperCase() + action.slice(1)
+}
+
 export const formatDateShort = (date: string) => {
   return new Date(date).toLocaleDateString('en-US', {
     month: 'short',
@@ -58,11 +63,13 @@ export const formatDateShort = (date: string) => {
 }
 
 export const formatDateLong = (date: string) => {
-  return new Date(date).toLocaleDateString('en-US', {
-    weekday: 'long',
-    month: 'long',
+  return new Date(date).toLocaleString('en-US', {
+    month: 'short',
     day: 'numeric',
     year: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    hour12: true,
   })
 }
 
@@ -75,12 +82,20 @@ export const formatPrice = (price: number) => {
 
 export const modalDt = ref({
   root: {
-    background: '{slate.200}',
+    background: 'white',
   },
 })
 
 export const tagDt = ref({
   root: { fontSize: '1rem' },
+})
+
+export const modalTagDt = ref({
+  root: { fontSize: '1rem' },
+})
+
+export const modalTagDtXl = ref({
+  root: { fontSize: '1.25rem' },
 })
 
 export const tableDt = ref({
@@ -91,4 +106,27 @@ export const tableDt = ref({
 
 export const rowClass = () => {
   return 'cursor-pointer'
+}
+
+export const brandImageUrl = (ticker: string) => {
+  return `https://cdn.brandfetch.io/${ticker}?c=${BRAND_ID}`
+}
+
+export const validateImageSize = async (ticker: string) => {
+  try {
+    const url = brandImageUrl(ticker)
+    const response = await fetch(url)
+
+    if (!response.ok) throw Error
+
+    const length = response.headers.get('Content-Length')
+    if (length) {
+      const size = parseInt(length, 10)
+      if (size > 500) {
+        return url
+      }
+    }
+  } catch (error) {
+    return
+  }
 }
