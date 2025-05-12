@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { ChartData } from '@/types/chart'
-import { onMounted, ref, nextTick, computed } from 'vue'
+import { onMounted, ref, computed, nextTick } from 'vue'
 import { fetchChartData } from '@/services/chart'
 import Chart from 'primevue/chart'
 
@@ -11,37 +11,50 @@ const props = defineProps({
   },
 })
 
-const data = ref<ChartData[]>()
+const data = ref<ChartData[]>([])
 const isLoading = ref(false)
+const chartReady = ref(false)
 
-const getRawData = async () => {
-  const rawData = await fetchChartData(props.ticker)
-  data.value = rawData
-}
+const chartData = ref()
+const chartOptions = ref()
 
-const hasChartData = computed(() => {
+const hasValidData = computed(() => {
   return data.value && data.value.length > 0
 })
 
+const getRawData = async () => {
+  try {
+    isLoading.value = true
+    const rawData = await fetchChartData(props.ticker)
+    data.value = rawData || []
+  } catch (error) {
+    data.value = []
+  } finally {
+    isLoading.value = false
+  }
+}
+
 const extractDates = (): string[] => {
-  if (!data.value) return []
+  if (!hasValidData.value) return []
   return data.value.map((item) => item.date)
 }
 
 const extractClose = (): number[] => {
-  if (!data.value) return []
+  if (!hasValidData.value) return []
   return data.value.map((item) => item.close)
 }
 
 const extractVolume = (): number[] => {
-  if (!data.value) return []
+  if (!hasValidData.value) return []
   return data.value.map((item) => item.volume)
 }
 
-const setChartData = () => {
+const prepareChartData = () => {
+  if (!hasValidData.value) return
+
   const documentStyle = getComputedStyle(document.documentElement)
 
-  return {
+  chartData.value = {
     labels: extractDates(),
     datasets: [
       {
@@ -59,12 +72,14 @@ const setChartData = () => {
         label: 'Volume',
         fill: false,
         yAxisID: 'volume',
-        backgroundColor: documentStyle.getPropertyValue('--p-sky-900'),
+        backgroundColor: documentStyle.getPropertyValue('--p-sky-900') || '#0c4a6e',
         tension: 0.4,
         data: extractVolume(),
       },
     ],
   }
+
+  chartOptions.value = setChartOptions()
 }
 
 const setChartOptions = () => {
@@ -112,7 +127,6 @@ const setChartOptions = () => {
           color: textColorSecondary,
         },
         grid: {
-          drawOnChartArea: false,
           color: surfaceBorder,
         },
       },
@@ -120,23 +134,28 @@ const setChartOptions = () => {
   }
 }
 
-const chartData = ref()
-const chartOptions = ref()
-
 onMounted(async () => {
-  isLoading.value = true
   await getRawData()
+
   await nextTick()
-  isLoading.value = false
-  chartData.value = setChartData()
-  chartOptions.value = setChartOptions()
+
+  if (hasValidData.value) {
+    prepareChartData()
+
+    await nextTick()
+
+    chartReady.value = true
+  }
 })
 </script>
 <template>
   <div v-if="isLoading" class="flex items-center justify-center">
     <i class="pi pi-spin pi-spinner" style="font-size: 2rem"></i>
   </div>
-  <div v-else class="card">
+  <div v-else-if="!hasValidData" class="flex items-center justify-center p-8">
+    <span class="text-gray-500">No chart data available for {{ props.ticker }}</span>
+  </div>
+  <div v-else-if="chartReady && chartData && chartOptions" class="card">
     <Chart type="line" :data="chartData" :options="chartOptions" class="h-[20rem]" />
   </div>
 </template>
