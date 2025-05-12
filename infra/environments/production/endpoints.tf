@@ -56,6 +56,25 @@ module "stocks_endpoint" {
   stage             = var.stage
 }
 
+module "chart_endpoint" {
+  source             = "../../modules/lambda_api_integration/"
+  lambda_source_path = "${path.module}/../../../backend/internal/functions/chart/main.go"
+  s3_bucket          = module.lambda_bucket.bucket
+  lambda_role        = module.lambda_role.arn
+  timeout            = 12
+  memory_size        = 128
+  log_retention_days = 7
+  env_vars           = { API_KEY = var.API_KEY }
+
+  endpoint_name     = "chart"
+  rest_api_id       = module.api_gateway.id
+  rest_api_exec_arn = module.api_gateway.execution_arn
+  parent_id         = module.api_gateway.root_resource_id
+  endpoint_path     = "chart"
+  http_method       = "GET"
+  stage             = var.stage
+}
+
 // TO DO: Improve redeployment strategy
 resource "aws_api_gateway_deployment" "deployment" {
   rest_api_id = module.api_gateway.id

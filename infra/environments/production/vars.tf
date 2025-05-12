@@ -41,6 +41,12 @@ variable "API_URL" {
   sensitive   = true
 }
 
+variable "API_KEY" {
+  description = "API key for external API"
+  type        = string
+  sensitive   = true
+}
+
 variable "BEARER_TOKEN" {
   description = "Bearer token for external API"
   type        = string
