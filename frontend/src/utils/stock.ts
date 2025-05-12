@@ -126,7 +126,5 @@ export const validateImageSize = async (ticker: string) => {
         return url
       }
     }
-  } catch (error) {
-    return
-  }
+  } catch (error) {}
 }

@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { priceAbsDiff, pricePercDiff, formatDateLong, formatAction } from '@/utils/stock'
 import { modalTagDt, modalTagDtXl, formatPrice, getRatingSeverity } from '@/utils/stock'
-import { computed } from 'vue'
+import { validateImageSize, brandImageUrl } from '@/utils/stock'
+import { computed, onMounted, ref } from 'vue'
 import StockChart from './StockChart.vue'
 
 const props = defineProps({
-  imageUrl: { type: String },
+  srcUrl: { type: String },
   ticker: { type: String, required: true },
   action: { type: String, required: true },
   company: { type: String, required: true },
@@ -17,17 +18,15 @@ const props = defineProps({
   time: { type: String, required: true },
 })
 
+const imageUrl = ref('')
+const imageError = ref(false)
+
 const modalTexts = computed(() => {
   return {
     price: '💰 Price target',
     rating: '📝 Rating',
     action: 'Action:',
   }
-})
-
-const validUrl = computed(() => {
-  console.log('imageUrl', props.imageUrl)
-  return props.imageUrl !== ''
 })
 
 const getNumberSeverity = (number: number) => {
@@ -53,12 +52,27 @@ const getPerc = computed(() => {
   const percDiff = pricePercDiff(props.targetFrom, props.targetTo)
   return `${Number(percDiff).toFixed(2)}%`
 })
+
+onMounted(async () => {
+  if (!props.srcUrl) {
+    try {
+      const url = await validateImageSize(props.ticker)
+      if (url) {
+        imageUrl.value = url
+      }
+    } catch (error) {
+      imageError.value = true
+    }
+  } else {
+    imageUrl.value = props.srcUrl
+  }
+})
 </script>
 <template>
   <div class="flex flex-col gap-2">
     <div class="flex items-center justify-between">
       <div class="flex flex-row items-center gap-2">
-        <img v-if="validUrl" :src="imageUrl" class="size-14" />
+        <img v-if="imageUrl && !imageError" :src="imageUrl" class="size-14" />
         <span class="text-2xl font-bold text-black dark:text-white"> {{ props.ticker }} </span>
       </div>
       <button
