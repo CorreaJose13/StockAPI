@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import type { Stock, StockWithScore } from '@/types/types'
 import { getRatingSeverity, getTargetArrow, getTargetSeverity } from '@/utils/stock'
-import { formatDateShort, modalDt } from '@/utils/stock'
+import { formatDateShort, modalDt, formatAction } from '@/utils/stock'
 import { useAnalysisStore } from '@/stores/analysis'
 
 const analysisStore = useAnalysisStore()
@@ -63,6 +63,12 @@ const tableColumns = computed(() => [
     template: (data: StockWithScore) => data.brokerage,
   },
   {
+    field: 'action',
+    header: 'Action',
+    style: 'width: 15%',
+    template: (data: StockWithScore) => formatAction(data.action),
+  },
+  {
     field: 'time',
     header: 'Date',
     style: 'width: 10%',
@@ -91,6 +97,7 @@ const rowClass = () => {
       :rowHover="true"
       :rowClass="rowClass"
       @row-click="onRowSelect"
+      class="w-full"
     >
       <Column
         v-for="col in tableColumns"
