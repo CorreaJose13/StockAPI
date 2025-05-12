@@ -1,21 +1,12 @@
 <script setup lang="ts">
-import {
-  priceAbsDiff,
-  formatDateShort,
-  modalDt,
-  getRatingSeverity,
-  formatPrice,
-  tagDt,
-} from '@/utils/stock'
+import { priceAbsDiff, formatDateShort, modalDt } from '@/utils/stock'
+import { getRatingSeverity, formatPrice, tagDt, validateImageSize } from '@/utils/stock'
 import StockModal from './StockModal.vue'
-import { BRAND_ID } from '@/config/config'
 import { computed, ref, onMounted } from 'vue'
 
 const showModal = ref(false)
-const imageError = ref(false)
 
-const validImage = ref(false)
-const imageLoading = ref(true)
+const imageError = ref(false)
 const imageUrl = ref('')
 
 const props = defineProps({
@@ -76,34 +67,22 @@ const ratingSection = computed(() => {
   }
 })
 
-const brandImageUrl = computed(() => {
-  return `https://cdn.brandfetch.io/${props.ticker}?c=${BRAND_ID}`
+const timeSection = computed(() => {
+  return {
+    title: 'Time:',
+    value: formatDateShort(props.time),
+  }
 })
 
-const validateImageSize = async () => {
-  imageLoading.value = true
+onMounted(async () => {
   try {
-    const response = await fetch(brandImageUrl.value)
-    if (!response.ok) throw Error
-
-    const length = response.headers.get('Content-Length')
-    if (length) {
-      const size = parseInt(length, 10)
-      validImage.value = size > 500
-      imageUrl.value = brandImageUrl.value
-    } else {
-      validImage.value = false
+    const url = await validateImageSize(props.ticker)
+    if (url) {
+      imageUrl.value = url
     }
   } catch (error) {
-    console.error('Error loading image:', error)
     imageError.value = true
-  } finally {
-    imageLoading.value = false
   }
-}
-
-onMounted(() => {
-  validateImageSize()
 })
 </script>
 <template>
@@ -113,12 +92,7 @@ onMounted(() => {
   >
     <div class="flex flex-col gap-2">
       <div class="flex items-center gap-2">
-        <img
-          v-if="validImage && !imageError"
-          :src="imageUrl"
-          class="size-8"
-          @error="imageError = true"
-        />
+        <img v-if="imageUrl && !imageError" :src="imageUrl" class="size-8" />
         <span class="text-xl font-bold text-black dark:text-white"> {{ props.ticker }} </span>
         <Tag :severity="getHeaderTag.severity" :dt="tagDt">
           {{ getHeaderTag.text }}
@@ -146,23 +120,24 @@ onMounted(() => {
       <div class="flex flex-row items-center gap-2 text-lg">
         <span class="font-semibold text-black dark:text-white">{{ ratingSection.label }}</span>
         <Tag :severity="getRatingSeverity(props.ratingTo)" class="size-sm capitalize" :dt="tagDt">
-          {{ props.ratingTo }}
+          {{ ratingSection.toValue }}
         </Tag>
       </div>
 
       <div class="text-sm text-gray-500 dark:text-gray-300">
-        Last update: {{ formatDateShort(props.time) }}
+        {{ timeSection.title }} {{ timeSection.value }}
       </div>
     </div>
   </div>
   <Dialog
     v-model:visible="showModal"
     modal
-    header="Stock details"
+    :header="`${props.ticker} details`"
     :dt="modalDt"
     :dismissableMask="true"
   >
     <StockModal
+      :imageUrl="imageUrl"
       :ticker="props.ticker"
       :action="props.action"
       :company="props.company"
