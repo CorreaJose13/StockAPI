@@ -49,6 +49,8 @@ func ConnectCockRoachDB(cfg *config.Config) (*CockRoachRepository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
 	return &CockRoachRepository{db}, nil
 }
@@ -162,8 +164,7 @@ func (repo *CockRoachRepository) mergeTables(ctx context.Context) error {
         SELECT t.ticker, t.target_from, t.target_to, t.company, t.action, t.brokerage, t.rating_from, t.rating_to, t.time
         FROM temp t
         LEFT JOIN stocks s ON t.ticker = s.ticker
-        WHERE s.ticker IS NULL
-    	`
+        WHERE s.ticker IS NULL`
 
 		if _, err := tx.Exec(mergeQuery); err != nil {
 			return err
@@ -195,7 +196,8 @@ func (repo *CockRoachRepository) updateStockTable(ctx context.Context) error {
        			s.action != t.action OR
        			s.brokerage != t.brokerage OR
        			s.rating_from != t.rating_from OR
-       			s.rating_to != t.rating_to);
+       			s.rating_to != t.rating_to
+				);
     	`
 
 		if _, err := tx.Exec(updateQuery); err != nil {
