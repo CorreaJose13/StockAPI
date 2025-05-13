@@ -40,21 +40,6 @@ func Formatter(stock *models.Stock) (*models.FormattedStock, error) {
 		return nil, fmt.Errorf("failed to format brokerage for '%s': %w", stock.Ticker, err)
 	}
 
-	formattedRatingFrom, err := formatRating(stock.RatingFrom)
-	if err != nil {
-		log.Printf("warning: empty rating_from for '%s': %v", stock.Ticker, err)
-	}
-
-	formattedRatingTo, err := formatRating(stock.RatingTo)
-	if err != nil {
-		log.Printf("warning: empty rating_to for '%s': %v", stock.Ticker, err)
-	}
-
-	formattedAction, err := formatAction(stock.Action)
-	if err != nil {
-		log.Printf("warning: empty action for '%s': %v", stock.Ticker, err)
-	}
-
 	formattedTargetFrom, err := formatTarget(stock.TargetFrom)
 	if err != nil {
 		return nil, fmt.Errorf("failed to format target_from for '%s': %w", stock.Ticker, err)
@@ -75,17 +60,17 @@ func Formatter(stock *models.Stock) (*models.FormattedStock, error) {
 		TargetFrom: formattedTargetFrom,
 		TargetTo:   formattedTargetTo,
 		Company:    formattedCompany,
-		Action:     formattedAction,
+		Action:     formatAction(stock.Action),
 		Brokerage:  formattedBrokerage,
-		RatingFrom: formattedRatingFrom,
-		RatingTo:   formattedRatingTo,
+		RatingFrom: formatRating(stock.RatingFrom),
+		RatingTo:   formatRating(stock.RatingTo),
 		Time:       formattedTime,
 	}, nil
 }
 
 func formatField(field string, fieldValue string, err error) (string, error) {
-	field = strings.TrimSpace(field)
-	if len(field) == 0 {
+	fieldValue = strings.TrimSpace(fieldValue)
+	if len(fieldValue) == 0 {
 		return "", fmt.Errorf("%w: %s name is required", err, field)
 	}
 	return fieldValue, nil
@@ -125,21 +110,22 @@ func formatTarget(target string) (float64, error) {
 	return value, nil
 }
 
-func formatDefaultField(field string, fieldValue string, defaultValue string) (string, error) {
-	field = strings.TrimSpace(strings.ToLower(field))
-	if len(field) == 0 {
-		return defaultValue, fmt.Errorf("empty %s  defaulted to '%s'", field, defaultValue)
+func formatDefaultField(field string, fieldValue string, defaultValue string) string {
+	fieldValue = strings.TrimSpace(strings.ToLower(fieldValue))
+	if len(fieldValue) == 0 {
+		log.Printf("warning: empty %s defaulted to '%s'", field, defaultValue)
+		return defaultValue
 	}
 
-	return fieldValue, nil
+	return fieldValue
 }
 
-func formatRating(rating string) (string, error) {
-	formattedRating, err := formatDefaultField("rating", rating, DefaultRating)
-	return narrowRating(formattedRating), err
+func formatRating(rating string) string {
+	formattedRating := formatDefaultField("rating", rating, DefaultRating)
+	return narrowRating(formattedRating)
 }
 
-func formatAction(action string) (string, error) {
+func formatAction(action string) string {
 	return formatDefaultField("action", action, DefaultAction)
 }
 
