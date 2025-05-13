@@ -11,15 +11,22 @@ import (
 
 var (
 	topBrokerages = []string{
-		"JPMorgan Chase & Co.",
-		"Evercore ISI",
-		"Bank of America",
 		"Morgan Stanley",
 		"Barclays",
-		"Citigroup",
-		"UBS Group",
-		"The Goldman Sachs Group",
+		"JPMorgan Chase & Co.",
 		"Wells Fargo & Company",
+		"Citigroup",
+		"Scotiabank",
+		"Raymond James",
+		"Piper Sandler",
+		"The Goldman Sachs Group",
+		"Stifel Nicolaus",
+		"Truist Financial",
+		"BMO Capital Markets",
+		"UBS Group",
+		"Jefferies Financial Group",
+		"Bank of America",
+		"CIBC",
 		"Deutsche Bank Aktiengesellschaft",
 	}
 )
@@ -27,10 +34,10 @@ var (
 const (
 	limitAnalysis    = 50
 	percChangeWeight = 25.0 / 100
-	absChangeWeight  = 20.0 / 100
+	absChangeWeight  = 5.0 / 100
 	timeWeight       = 15.0 / 100
-	brokerageWeight  = 10.0 / 100
-	ratingWeight     = 15.0 / 100
+	brokerageWeight  = 20.0 / 100
+	ratingWeight     = 20.0 / 100
 	ratingDiffWeight = 10.0 / 100
 	actionWeight     = 5 / 100
 )
