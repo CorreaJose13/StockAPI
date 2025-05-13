@@ -14,7 +14,7 @@ import (
 
 // local function to fetch and store stocks retrieved from the API
 func main() {
-	_ = context.Background()
+	ctx := context.Background()
 
 	cfg, err := config.LoadConfig()
 	if err != nil {
@@ -26,15 +26,18 @@ func main() {
 		log.Fatalf("failed to initialize database repository: %v", err)
 	}
 
+	defer repo.Close()
+
 	repository.SetStockRepository(repo)
 
 	stocks := fetchStocks(cfg)
 
 	formattedStocks := formatStocks(stocks)
 
-	if err := repository.BulkInsertStocks(context.Background(), formattedStocks); err != nil {
+	if err := repository.BulkInsertStocks(ctx, formattedStocks, "stocks"); err != nil {
 		log.Fatalf("failed to insert stocks: %v", err)
 	}
+
 }
 
 func fetchStocks(cfg *config.Config) []models.Stock {
@@ -58,6 +61,7 @@ func formatStocks(stocks []models.Stock) []*models.FormattedStock {
 		if err != nil {
 			log.Fatalf("failed to format stock: %v", err)
 		}
+
 		formattedStocks = append(formattedStocks, formattedStock)
 	}
 	return formattedStocks

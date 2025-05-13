@@ -2,7 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"context"
@@ -30,10 +32,18 @@ var (
 		"ASC":  true,
 		"DESC": true,
 	}
+
+	ErrInvalidField = errors.New("invalid field")
+	ErrInvalidOrder = errors.New("invalid order")
 )
 
 type CockRoachRepository struct {
 	db *sql.DB
+}
+
+type queryBuilder struct {
+	query  string
+	params []any
 }
 
 const (
@@ -49,134 +59,196 @@ func ConnectCockRoachDB(cfg *config.Config) (*CockRoachRepository, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect database: %w", err)
 	}
+	db.SetMaxOpenConns(1)
+	db.SetMaxIdleConns(1)
 
 	return &CockRoachRepository{db}, nil
 }
 
-func (repo *CockRoachRepository) GetStocksFiltered(ctx context.Context, field, order, search string, page, limit int) ([]*models.FormattedStock, error) {
+func (repo *CockRoachRepository) GetStocksFiltered(ctx context.Context, field, order, search, tableName string, page, limit int) ([]*models.FormattedStock, error) {
 
-	query, params := filterQueryParams(field, order, search, page, limit)
-	rows, err := repo.db.QueryContext(ctx, query, params...)
+	result, err := filterQueryParams(field, order, search, tableName, page, limit)
 	if err != nil {
-		return nil, fmt.Errorf("failed to query stocks: %w", err)
+		return nil, err
 	}
+
+	rows, err := repo.db.QueryContext(ctx, result.query, result.params...)
+	if err != nil {
+		return nil, fmt.Errorf("failed to query filtered stocks: %w", err)
+	}
+
 	defer rows.Close()
 
 	stocks, err := scanRows(rows)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan stocks: %w", err)
+		return nil, err
 	}
 
 	return stocks, nil
 }
 
-func (repo *CockRoachRepository) GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
-	rows, err := repo.db.QueryContext(ctx, "SELECT * FROM stocks")
+func (repo *CockRoachRepository) GetStocks(ctx context.Context, tableName string) ([]*models.FormattedStock, error) {
+	query := fmt.Sprintf(`SELECT * FROM %s`, pq.QuoteIdentifier(tableName))
+	rows, err := repo.db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("failed to query stocks: %w", err)
 	}
+
 	defer rows.Close()
 
 	stocks, err := scanRows(rows)
 	if err != nil {
-		return nil, fmt.Errorf("failed to scan stocks: %w", err)
+		return nil, err
 	}
 
 	return stocks, nil
 }
 
-func (repo *CockRoachRepository) GetTableLength(ctx context.Context) (int, error) {
+func (repo *CockRoachRepository) GetTableLength(ctx context.Context, tableName string) (int, error) {
 	var count int
-	err := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM stocks").Scan(&count)
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", pq.QuoteIdentifier(tableName))
+	err := repo.db.QueryRowContext(ctx, query).Scan(&count)
 	if err != nil {
-		return 0, fmt.Errorf("failed to get table length: %w", err)
+		return 0, fmt.Errorf("failed to get table %s length: %w", tableName, err)
 	}
+
 	return count, nil
 }
 
-func (repo *CockRoachRepository) BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error {
+func (repo *CockRoachRepository) BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock, tableName string) error {
 
-	err := repo.createTable(ctx, "stocks")
+	err := repo.createTable(ctx, tableName)
 	if err != nil {
-		return fmt.Errorf("failed to create stocks table: %w", err)
+		return err
 	}
 
-	err = repo.bulkInsertToTable(ctx, "stocks", stocks)
+	err = repo.bulkInsertToTable(ctx, tableName, stocks)
 	if err != nil {
-		return fmt.Errorf("failed to bulk insert stocks: %w", err)
+		return err
 	}
 
 	return nil
 }
 
-func (repo *CockRoachRepository) BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock) error {
-
-	err := repo.createTable(ctx, "temp")
+func (repo *CockRoachRepository) BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock, originalTable, tempTable string) error {
+	err := repo.createTable(ctx, tempTable)
 	if err != nil {
-		return fmt.Errorf("failed to create table: %w", err)
+		return err
 	}
 
-	err = repo.bulkInsertToTable(ctx, "temp", stocks)
+	defer func() error {
+		err = repo.dropTable(ctx, tempTable)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}()
+
+	err = repo.bulkInsertToTable(ctx, tempTable, stocks)
 	if err != nil {
-		return fmt.Errorf("failed to bulk insert stocks in temp table: %w", err)
+		return err
 	}
 
-	count, err := repo.compareTables(ctx)
+	count, err := repo.compareTables(ctx, originalTable, tempTable)
 	if err != nil {
-		return fmt.Errorf("failed to compare tables: %w", err)
+		return err
 	}
 
 	if count > 0 {
-		err = repo.mergeTables(ctx)
+		err = repo.mergeTables(ctx, originalTable, tempTable)
 		if err != nil {
-			return fmt.Errorf("failed to merge tables: %w", err)
+			return err
 		}
 
-		err = repo.updateStockTable(ctx)
+		err = repo.updateTable(ctx, originalTable, tempTable)
 		if err != nil {
-			return fmt.Errorf("failed to update stocks: %w", err)
+			return err
 		}
+
 	}
 
-	err = repo.DropTable(ctx, "temp")
+	deleteCount, err := repo.compareTables(ctx, tempTable, originalTable)
 	if err != nil {
-		return fmt.Errorf("failed to drop temp table: %w", err)
+		return err
+	}
+
+	if deleteCount > 0 {
+		err = repo.deleteObsoleteRows(ctx, originalTable, tempTable)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func (repo *CockRoachRepository) compareTables(ctx context.Context) (int, error) {
+func (repo *CockRoachRepository) compareTables(ctx context.Context, originalTable, tempTable string) (int, error) {
 	var count int
-	err := repo.db.QueryRowContext(ctx, "SELECT COUNT(*) FROM (SELECT * FROM temp EXCEPT SELECT * FROM stocks);").Scan(&count)
+	query := fmt.Sprintf(`SELECT COUNT(*) FROM (SELECT * FROM %s EXCEPT SELECT * FROM %s)`, pq.QuoteIdentifier(tempTable), pq.QuoteIdentifier(originalTable))
+	err := repo.db.QueryRowContext(ctx, query).Scan(&count)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("failed to compare tables %s and %s: %w", originalTable, tempTable, err)
 	}
 	return count, nil
 }
 
-func (repo *CockRoachRepository) mergeTables(ctx context.Context) error {
+func (repo *CockRoachRepository) deleteObsoleteRows(ctx context.Context, originalTable, tempTable string) error {
 	return repo.execInTransaction(ctx, func(tx *sql.Tx) error {
-		mergeQuery := `
-        INSERT INTO stocks (ticker, target_from, target_to, company, action, brokerage, rating_from, rating_to, time)
-        SELECT t.ticker, t.target_from, t.target_to, t.company, t.action, t.brokerage, t.rating_from, t.rating_to, t.time
-        FROM temp t
-        LEFT JOIN stocks s ON t.ticker = s.ticker
-        WHERE s.ticker IS NULL
-    	`
+		mergeQuery := fmt.Sprintf(`
+		DELETE FROM %s 
+		WHERE ticker IN (
+    		SELECT o.ticker 
+    		FROM %s o 
+    		LEFT JOIN %s t ON o.ticker = t.ticker 
+    		WHERE t.ticker IS NULL
+			)`, pq.QuoteIdentifier(originalTable), pq.QuoteIdentifier(originalTable), pq.QuoteIdentifier(tempTable))
 
-		if _, err := tx.Exec(mergeQuery); err != nil {
-			return err
+		result, err := tx.ExecContext(ctx, mergeQuery)
+		if err != nil {
+			return fmt.Errorf("error deleting rows in table %s: %w", originalTable, err)
 		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("error getting rows affected in %s: %w", originalTable, err)
+		}
+
+		log.Printf("Deleted %d obsolete stocks into %s table", rowsAffected, originalTable)
 
 		return nil
 	})
 }
 
-func (repo *CockRoachRepository) updateStockTable(ctx context.Context) error {
+func (repo *CockRoachRepository) mergeTables(ctx context.Context, originalTable, tempTable string) error {
 	return repo.execInTransaction(ctx, func(tx *sql.Tx) error {
-		updateQuery := `
-		UPDATE stocks s
+		mergeQuery := fmt.Sprintf(`
+        INSERT INTO %s (ticker, target_from, target_to, company, action, brokerage, rating_from, rating_to, time)
+        SELECT t.ticker, t.target_from, t.target_to, t.company, t.action, t.brokerage, t.rating_from, t.rating_to, t.time
+        FROM %s t
+        LEFT JOIN stocks s ON t.ticker = s.ticker
+        WHERE s.ticker IS NULL`, pq.QuoteIdentifier(originalTable), pq.QuoteIdentifier(tempTable))
+
+		result, err := tx.ExecContext(ctx, mergeQuery)
+		if err != nil {
+			return fmt.Errorf("error merging in table %s: %w", originalTable, err)
+		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("error getting rows affected in %s: %w", originalTable, err)
+		}
+
+		log.Printf("Merged %d new stocks into %s table", rowsAffected, originalTable)
+
+		return nil
+	})
+}
+
+func (repo *CockRoachRepository) updateTable(ctx context.Context, originalTable, tempTable string) error {
+	return repo.execInTransaction(ctx, func(tx *sql.Tx) error {
+		updateQuery := fmt.Sprintf(`
+		UPDATE %s s
 		SET
     		target_from = t.target_from,
     		target_to = t.target_to,
@@ -186,7 +258,7 @@ func (repo *CockRoachRepository) updateStockTable(ctx context.Context) error {
     		brokerage = t.brokerage,
     		rating_from = t.rating_from,
     		rating_to = t.rating_to
-		FROM temp t
+		FROM %s t
 		WHERE s.ticker = t.ticker
   			AND (s.target_from != t.target_from OR
        			s.target_to != t.target_to OR
@@ -195,12 +267,21 @@ func (repo *CockRoachRepository) updateStockTable(ctx context.Context) error {
        			s.action != t.action OR
        			s.brokerage != t.brokerage OR
        			s.rating_from != t.rating_from OR
-       			s.rating_to != t.rating_to);
-    	`
+       			s.rating_to != t.rating_to
+				);
+    	`, pq.QuoteIdentifier(originalTable), pq.QuoteIdentifier(tempTable))
 
-		if _, err := tx.Exec(updateQuery); err != nil {
-			return err
+		result, err := tx.ExecContext(ctx, updateQuery)
+		if err != nil {
+			return fmt.Errorf("error updating table %s: %w", originalTable, err)
 		}
+
+		rowsAffected, err := result.RowsAffected()
+		if err != nil {
+			return fmt.Errorf("error getting rows affected in %s: %w", originalTable, err)
+		}
+
+		log.Printf("Updated %d stocks in %s table", rowsAffected, originalTable)
 
 		return nil
 	})
@@ -211,22 +292,25 @@ func (repo *CockRoachRepository) bulkInsertToTable(ctx context.Context, tableNam
 		stmt, err := tx.Prepare(pq.CopyIn(tableName, "ticker", "target_from", "target_to",
 			"company", "action", "brokerage", "rating_from", "rating_to", "time"))
 		if err != nil {
-			return err
+			return fmt.Errorf("error preparing bulk insert statement: %w", err)
 		}
+
 		defer stmt.Close()
 
 		for _, stock := range stocks {
-			_, err = stmt.Exec(stock.Ticker, stock.TargetFrom, stock.TargetTo, stock.Company,
+			_, err = stmt.ExecContext(ctx, stock.Ticker, stock.TargetFrom, stock.TargetTo, stock.Company,
 				stock.Action, stock.Brokerage, stock.RatingFrom, stock.RatingTo, stock.Time)
 			if err != nil {
-				return err
+				return fmt.Errorf("error adding item %s to bulk insert: %w", stock.Ticker, err)
 			}
 		}
 
-		_, err = stmt.Exec()
+		_, err = stmt.ExecContext(ctx)
 		if err != nil {
-			return err
+			return fmt.Errorf("error finalizing bulk insert to %s: %w", tableName, err)
 		}
+
+		log.Printf("Inserted %d stocks into %s", len(stocks), tableName)
 
 		return nil
 	})
@@ -246,70 +330,93 @@ func (repo *CockRoachRepository) createTable(ctx context.Context, tableName stri
 		time TIMESTAMP WITH TIME ZONE NOT NULL
 		)`, pq.QuoteIdentifier(tableName))
 
-		if _, err := tx.Exec(createTableQuery); err != nil {
-			return err
+		if _, err := tx.ExecContext(ctx, createTableQuery); err != nil {
+			return fmt.Errorf("error creating table %s: %w", tableName, err)
 		}
+
+		log.Printf("Table %s created successfully", tableName)
 
 		return nil
 	})
 }
 
-func (repo *CockRoachRepository) DropTable(ctx context.Context, tableName string) error {
+func (repo *CockRoachRepository) dropTable(ctx context.Context, tableName string) error {
 	return repo.execInTransaction(ctx, func(tx *sql.Tx) error {
 		dropTableQuery := fmt.Sprintf("DROP TABLE IF EXISTS %s", pq.QuoteIdentifier(tableName))
-		if _, err := tx.Exec(dropTableQuery); err != nil {
-			return err
+
+		if _, err := tx.ExecContext(ctx, dropTableQuery); err != nil {
+			return fmt.Errorf("error droping table %s: %w", tableName, err)
 		}
+
+		log.Printf("Table %s dropped successfully", tableName)
+
 		return nil
 	})
 }
 
-func filterQueryParams(field, order, search string, page, limit int) (string, []any) {
+func filterQueryParams(field, order, search, tableName string, page, limit int) (queryBuilder, error) {
 	page, limit = normalizePaginationParams(page, limit)
 	offset := (page - 1) * limit
-	query := generatePaginationQuery(field, order, search)
+
+	query, err := generatePaginationQuery(field, order, search, tableName)
+	if err != nil {
+		return queryBuilder{}, err
+	}
+
 	params := make([]any, 0)
+
 	searchParams := getSearchParams(search)
 	params = append(params, searchParams...)
 	params = append(params, limit, offset)
 
-	return query, params
+	return queryBuilder{
+		query:  query,
+		params: params,
+	}, nil
 }
 
-func generatePaginationQuery(field, order, search string) string {
-	var pagination string
-	baseQuery := "SELECT * FROM stocks"
+func generatePaginationQuery(field, order, search, tableName string) (string, error) {
+
+	baseQuery := fmt.Sprintf(`SELECT * FROM %s`, pq.QuoteIdentifier(tableName))
+
+	orderStm, err := buildOrderStatement(field, order)
+	if err != nil {
+		return "", err
+	}
+
 	searchStm := buildSearchStatement(search)
-	orderStm := buildOrderStatement(field, order)
 
 	query := baseQuery
 	if searchStm != "" {
 		query += " " + searchStm
 	}
-	if orderStm != "" {
-		query += " " + orderStm
-	}
 
+	query += " " + orderStm
+
+	var pagination string
 	if searchStm != "" {
 		pagination = " LIMIT $2 OFFSET $3"
 	} else {
 		pagination = " LIMIT $1 OFFSET $2"
 	}
 
-	return query + pagination
+	return query + pagination, nil
 }
 
 // validate max pages
 func normalizePaginationParams(page, limit int) (int, int) {
-	if page <= 0 {
-		page = defaultPage
-	}
 	if limit <= 0 {
 		limit = defaultLimit
 	}
+
 	if limit > maxLimit {
 		limit = maxLimit
 	}
+
+	if page <= 0 {
+		page = defaultPage
+	}
+
 	return page, limit
 }
 
@@ -322,6 +429,7 @@ func isValidOrder(order string) bool {
 }
 
 func buildSearchStatement(search string) string {
+	search = strings.TrimSpace(search)
 	if search == "" {
 		return ""
 	}
@@ -329,25 +437,34 @@ func buildSearchStatement(search string) string {
 }
 
 func getSearchParams(search string) []any {
+	search = strings.TrimSpace(search)
 	if search == "" {
 		return []any{}
 	}
 	return []any{"%" + search + "%"}
 }
 
-func buildOrderStatement(field, order string) string {
-	if !isValidField(field) {
+func buildOrderStatement(field, order string) (string, error) {
+	field = strings.ToLower(strings.TrimSpace(field))
+	order = strings.ToUpper(strings.TrimSpace(order))
+
+	if field != "" && !isValidField(field) {
+		return "", fmt.Errorf("error building statement: %w", ErrInvalidField)
+	}
+
+	if order != "" && !isValidOrder(order) {
+		return "", fmt.Errorf("error building statement: %w", ErrInvalidOrder)
+	}
+
+	if field == "" {
 		field = defaultField
 	}
 
-	if !isValidOrder(order) {
+	if order == "" {
 		order = defaultOrder
 	}
 
-	field = strings.ToLower(field)
-	order = strings.ToUpper(order)
-
-	return fmt.Sprintf("ORDER BY %s %s", field, order)
+	return fmt.Sprintf("ORDER BY %s %s", field, order), nil
 }
 
 func scanRows(rows *sql.Rows) ([]*models.FormattedStock, error) {
@@ -365,7 +482,7 @@ func scanRows(rows *sql.Rows) ([]*models.FormattedStock, error) {
 			&stock.RatingTo,
 			&stock.Time,
 		); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("error scanning rows: %w", err)
 		}
 		stocks = append(stocks, &stock)
 	}

@@ -14,7 +14,7 @@ module "update_scheduler" {
     BEARER_TOKEN = var.BEARER_TOKEN
   }
 
-  schedule_expression     = "cron(0 8-15 ? * mon-fri *)" # Every hour from 8 AM to 3 PM, Monday to Friday
+  schedule_expression     = "cron(35 19 ? * mon-fri *)" # Every hour from 8 AM to 3 PM, Monday to Friday
   scheduler_name          = "update_db_scheduler"
   lambda_scheduler_role   = var.lambda_scheduler_role
   lambda_scheduler_policy = var.lambda_scheduler_policy

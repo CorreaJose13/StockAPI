@@ -7,11 +7,11 @@ import (
 )
 
 type StockRepository interface {
-	BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error
-	BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock) error
-	GetStocks(ctx context.Context) ([]*models.FormattedStock, error)
-	GetTableLength(ctx context.Context) (int, error)
-	GetStocksFiltered(ctx context.Context, field, order, search string, page, limit int) ([]*models.FormattedStock, error)
+	BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock, tableName string) error
+	BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock, originalTable, tempTable string) error
+	GetStocks(ctx context.Context, tableName string) ([]*models.FormattedStock, error)
+	GetTableLength(ctx context.Context, tableName string) (int, error)
+	GetStocksFiltered(ctx context.Context, field, order, search, tableName string, page, limit int) ([]*models.FormattedStock, error)
 	Close() error
 }
 
@@ -21,24 +21,24 @@ func SetStockRepository(repo StockRepository) {
 	stockRepoImpl = repo
 }
 
-func BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock) error {
-	return stockRepoImpl.BulkInsertStocks(ctx, stocks)
+func BulkInsertStocks(ctx context.Context, stocks []*models.FormattedStock, tableName string) error {
+	return stockRepoImpl.BulkInsertStocks(ctx, stocks, tableName)
 }
 
-func GetStocks(ctx context.Context) ([]*models.FormattedStock, error) {
-	return stockRepoImpl.GetStocks(ctx)
+func BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock, originalTable, tempTable string) error {
+	return stockRepoImpl.BulkUpdateStocks(ctx, stocks, originalTable, tempTable)
 }
 
-func GetTableLength(ctx context.Context) (int, error) {
-	return stockRepoImpl.GetTableLength(ctx)
+func GetStocks(ctx context.Context, tableName string) ([]*models.FormattedStock, error) {
+	return stockRepoImpl.GetStocks(ctx, tableName)
 }
 
-func GetStocksFiltered(ctx context.Context, field, order, search string, page, limit int) ([]*models.FormattedStock, error) {
-	return stockRepoImpl.GetStocksFiltered(ctx, field, order, search, page, limit)
+func GetTableLength(ctx context.Context, tableName string) (int, error) {
+	return stockRepoImpl.GetTableLength(ctx, tableName)
 }
 
-func BulkUpdateStocks(ctx context.Context, stocks []*models.FormattedStock) error {
-	return stockRepoImpl.BulkUpdateStocks(ctx, stocks)
+func GetStocksFiltered(ctx context.Context, field, order, search, tableName string, page, limit int) ([]*models.FormattedStock, error) {
+	return stockRepoImpl.GetStocksFiltered(ctx, field, order, search, tableName, page, limit)
 }
 
 func Close() error {
