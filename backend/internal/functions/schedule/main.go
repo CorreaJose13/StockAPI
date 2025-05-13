@@ -33,7 +33,7 @@ func handler(ctx context.Context) {
 
 	formattedStocks := formatStocks(stocks)
 
-	if err := repository.BulkUpdateStocks(context.Background(), formattedStocks); err != nil {
+	if err := repository.BulkUpdateStocks(context.Background(), formattedStocks, "stocks", "temp"); err != nil {
 		log.Fatalf("failed to insert stocks: %v", err)
 	}
 }

@@ -27,7 +27,7 @@ func handler(ctx context.Context, req events.APIGatewayProxyRequest) (events.API
 		return events.APIGatewayProxyResponse{}, initErr
 	}
 
-	stocks, err := repository.GetStocks(ctx)
+	stocks, err := repository.GetStocks(ctx, "stocks")
 	if err != nil {
 		return response.Error(http.StatusInternalServerError, err.Error())
 	}
