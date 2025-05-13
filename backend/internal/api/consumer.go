@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 
 	"github.com/CorreaJose13/StockAPI/config"
@@ -38,6 +39,8 @@ func (ac *apiConsumer) FetchStocks() ([]models.Stock, error) {
 		if err != nil {
 			return nil, fmt.Errorf("error fetching stocks: %w", err)
 		}
+
+		log.Printf("Fetched %d stocks from page %s", len(body.Items), nextPage)
 
 		stocks = append(stocks, body.Items...)
 
